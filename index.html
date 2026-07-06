@@ -4,293 +4,454 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Kandidatpresentation – Admin</title>
+<title>Kandidatpresentation – Wrknest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* ============================================================
+     WRKNEST BRAND-TOKENS – byt hex-värdena här för exakt branding
+     (kopiera från Konkurrentradar om du vill matcha 1:1)
+     ============================================================ */
   :root{
-    --brand-ink:#3D2530; --brand-pink:#F4D4E3; --brand-accent:#ED7B4D; --brand-accent-soft:#FBE7DD;
-    --paper:#fff; --bg:#FAF1F5; --line:#EFDAE3; --text:#463038; --muted:#8A6E79;
-    --good:#0E8F6E; --mid:#C77E1F; --bad:#B4443C; --radius:14px;
+    --brand-ink:#3D2530;        /* mörk plommon (text, rubriker) */
+    --brand-pink:#F4D4E3;       /* Wrknest ljusrosa (header, bakgrundston) */
+    --brand-accent:#ED7B4D;     /* Wrknest korall (knappar, aktivt steg) */
+    --brand-accent-soft:#FBE7DD;/* ljus korallyta */
+    --brand-salmon:#F09E86;     /* laxrosa (sekundär accent) */
+    --paper:#FFFFFF;
+    --bg:#FAF1F5;
+    --line:#EFDAE3;
+    --text:#463038;
+    --muted:#8A6E79;
+    --good:#0E8F6E; --mid:#C77E1F; --bad:#B4443C;
+    --radius:14px;
+    --font-display:'Bricolage Grotesque',sans-serif;
+    --font-body:'Inter',sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh}
   button{font-family:inherit;cursor:pointer}
-  header{background:var(--brand-pink);color:var(--brand-ink);padding:20px 28px}
-  header h1{font-family:'Bricolage Grotesque',sans-serif;font-size:1.3rem;font-weight:600}
-  header .sub{font-size:.78rem;color:var(--brand-accent);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
-  main{max-width:920px;margin:0 auto;padding:24px 28px 80px;display:flex;flex-direction:column;gap:18px}
-  .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
-  .panel h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.05rem;font-weight:600;color:var(--brand-ink);margin-bottom:12px}
-  label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin:10px 0 4px}
-  input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.9rem}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  .row>div{flex:1;min-width:180px}
-  .btn{background:var(--brand-accent);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:600;font-size:.88rem;margin-top:12px}
-  .btn.ghost{background:var(--paper);color:var(--text);border:1px solid var(--line)}
-  .btn.danger{background:#F9E8E7;color:var(--bad)}
-  .btn:disabled{opacity:.5;cursor:default}
-  .msg{margin-top:10px;font-size:.84rem}
-  .msg.err{color:var(--bad)} .msg.ok{color:var(--good)}
-  .project{border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px;background:var(--paper)}
-  .project h3{font-family:'Bricolage Grotesque',sans-serif;font-size:1rem;color:var(--brand-ink)}
-  .project .meta{font-size:.78rem;color:var(--muted);margin:4px 0 10px}
-  .linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.8rem;word-break:break-all}
-  .linkbox button{flex-shrink:0;border:none;background:var(--brand-accent);color:#fff;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:600}
-  .stage-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:.84rem}
-  .stage-row input[type=text]{flex:1;padding:7px 10px;font-size:.84rem}
-  .stage-row .tt{color:var(--muted);font-size:.74rem;width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .toggles{display:flex;gap:18px;margin-top:10px;font-size:.84rem;flex-wrap:wrap}
-  .toggles label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;color:var(--text);font-size:.84rem}
-  details{margin-top:10px}
-  summary{cursor:pointer;font-size:.84rem;font-weight:600;color:var(--brand-accent)}
-  .fb-cand{border-top:1px solid var(--line);padding:10px 0;font-size:.84rem}
-  .fb-cand .v{font-weight:600}
-  .v.meet{color:var(--good)} .v.maybe{color:var(--mid)} .v.no{color:var(--bad)}
-  .fb-note{margin-top:4px;padding-left:12px;border-left:2px solid var(--line);font-size:.8rem}
-  .fb-note .meta{color:var(--muted);font-size:.72rem}
-  .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-  .badge{font-size:.72rem;padding:3px 10px;border-radius:999px;background:var(--brand-accent-soft);color:var(--brand-accent);font-weight:600}
-  .badge.off{background:#F1F1F1;color:var(--muted)}
+
+  /* ---------- Header ---------- */
+  header{background:var(--brand-pink);color:var(--brand-ink);padding:26px 28px}
+  .head-inner{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  .wordmark{font-family:var(--font-display);font-weight:700;font-size:1.05rem;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-accent)}
+  h1{font-family:var(--font-display);font-weight:600;font-size:1.7rem;margin-top:6px;line-height:1.2}
+  .client-tag{font-size:.85rem;background:var(--paper);color:var(--brand-ink);padding:6px 14px;border-radius:999px;white-space:nowrap}
+
+  main{max-width:1180px;margin:0 auto;padding:26px 28px 60px}
+
+  /* ---------- Signatur: processlinjen ---------- */
+  .pipeline{display:flex;gap:0;overflow-x:auto;padding-bottom:6px;margin-bottom:26px}
+  .step{position:relative;flex:1;min-width:150px;border:1px solid var(--line);background:var(--paper);
+        padding:12px 16px 12px 26px;text-align:left;transition:background .15s}
+  .step:first-child{border-radius:10px 0 0 10px;padding-left:16px}
+  .step:last-child{border-radius:0 10px 10px 0}
+  .step:not(:last-child){border-right:none}
+  .step::after{content:"";position:absolute;top:50%;right:-9px;width:18px;height:18px;transform:translateY(-50%) rotate(45deg);
+        background:var(--paper);border-top:1px solid var(--line);border-right:1px solid var(--line);z-index:2}
+  .step:last-child::after{display:none}
+  .step .count{font-family:var(--font-display);font-weight:700;font-size:1.25rem;display:block}
+  .step .label{font-size:.78rem;color:var(--muted)}
+  .step.active{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+  .step.active::after{background:var(--brand-accent);border-color:var(--brand-accent)}
+  .step.active .label{color:rgba(255,255,255,.85)}
+  .step.all-step{flex:0 0 auto;min-width:110px}
+
+  /* ---------- Progress & effekter ---------- */
+  .progress-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .progress-text{font-size:.84rem;font-weight:600;color:var(--brand-ink)}
+  .progress-bar{flex:1;min-width:160px;height:10px;background:var(--brand-accent-soft);border-radius:999px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--brand-salmon),var(--brand-accent));border-radius:999px;transition:width .5s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .confetti{position:fixed;top:-14px;width:9px;height:14px;z-index:99;pointer-events:none;animation:confFall linear forwards}
+  @keyframes confFall{to{transform:translateY(105vh) rotate(720deg)}}
+
+  /* ---------- Kandidatkort ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px;
+        display:flex;flex-direction:column;gap:10px;text-align:left;transition:transform .12s, box-shadow .12s;
+        animation:fadeUp .35s ease backwards}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(18,36,47,.08)}
+  .card-top{display:flex;gap:12px;align-items:center}
+  .avatar{width:52px;height:52px;border-radius:50%;background:var(--brand-accent-soft);color:var(--brand-accent);
+          display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;
+          font-size:1.05rem;flex-shrink:0;overflow:hidden}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .card h3{font-family:var(--font-display);font-weight:600;font-size:1.02rem;color:var(--brand-ink)}
+  .card .stage-pill{font-size:.72rem;color:var(--muted)}
+  .card .pitch{font-size:.85rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px}
+  .cv-chip{font-size:.74rem;padding:4px 10px;border-radius:999px;background:var(--brand-accent-soft);color:var(--brand-accent);font-weight:600}
+  .cv-chip.none{background:#F1F1F1;color:var(--muted);font-weight:400}
+  .verdict-dot{font-size:.76rem;font-weight:600;padding:4px 10px;border-radius:999px}
+  .verdict-dot.meet{background:#E3F4EE;color:var(--good)}
+  .verdict-dot.maybe{background:#FBF0DE;color:var(--mid)}
+  .verdict-dot.no{background:#F9E8E7;color:var(--bad)}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--muted)}
+
+  /* ---------- Detaljpanel ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(61,37,48,.45);display:none;z-index:10}
+  .overlay.open{display:block}
+
+  /* ---------- Omdömesuppföljning ---------- */
+  .fu{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+  .fu textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-family:inherit;font-size:.83rem;min-height:64px;resize:vertical}
+  .fu .hint{font-size:.76rem;color:var(--muted)}
+  .fu input[type=datetime-local]{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.83rem;color:var(--text)}
+  .fu .opts{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;align-items:center}
+  .fu .opts label{display:flex;gap:5px;align-items:center;cursor:pointer}
+  .fu select{border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-family:inherit;font-size:.83rem}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(860px,100%);background:var(--bg);z-index:11;
+          transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{background:var(--paper);border-bottom:1px solid var(--line);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .drawer-head h2{font-family:var(--font-display);font-weight:600;font-size:1.25rem;color:var(--brand-ink)}
+  .drawer-head .sub{font-size:.8rem;color:var(--muted);margin-top:2px}
+  .close-btn{border:1px solid var(--line);background:var(--paper);border-radius:10px;width:38px;height:38px;font-size:1.1rem}
+  .drawer-body{flex:1;overflow-y:auto;padding:20px 24px;display:grid;grid-template-columns:1fr 320px;gap:18px}
+  @media(max-width:820px){.drawer-body{grid-template-columns:1fr}}
+
+  .cv-frame-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;min-height:520px;display:flex;flex-direction:column}
+  .cv-frame-wrap iframe{flex:1;border:none;width:100%;min-height:520px}
+  .cv-missing{padding:60px 20px;text-align:center;color:var(--muted)}
+  .cv-toolbar{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted)}
+  .cv-toolbar a{color:var(--brand-accent);font-weight:600;text-decoration:none}
+
+  .side{display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .panel h4{font-family:var(--font-display);font-size:.92rem;font-weight:600;color:var(--brand-ink);margin-bottom:10px}
+  .pitch-full{font-size:.86rem;color:var(--text);line-height:1.5;white-space:pre-wrap}
+  .contact-row{font-size:.84rem;margin-bottom:6px;word-break:break-all}
+  .contact-row span{color:var(--muted);display:inline-block;width:64px}
+
+  .verdict-row{display:flex;gap:8px}
+  .verdict-btn{flex:1;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 6px;font-size:.78rem;font-weight:600;color:var(--muted)}
+  .verdict-btn.meet.sel{background:#E3F4EE;border-color:var(--good);color:var(--good)}
+  .verdict-btn.maybe.sel{background:#FBF0DE;border-color:var(--mid);color:var(--mid)}
+  .verdict-btn.no.sel{background:#F9E8E7;border-color:var(--bad);color:var(--bad)}
+
+  .note{border-top:1px solid var(--line);padding:10px 0;font-size:.84rem}
+  .note:first-of-type{border-top:none}
+  .note .meta{font-size:.72rem;color:var(--muted);margin-bottom:3px}
+  .note-form textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit;font-size:.84rem;resize:vertical;min-height:70px}
+  .note-form input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.84rem;margin-top:8px}
+  .send-btn{margin-top:8px;width:100%;background:var(--brand-accent);color:#fff;border:none;border-radius:10px;padding:10px;font-weight:600;font-size:.86rem}
+  .send-btn:disabled{opacity:.5;cursor:default}
+
+  .loading,.fatal{padding:80px 20px;text-align:center;color:var(--muted);font-size:.95rem}
+  .fatal{color:var(--bad)}
+  footer{text-align:center;font-size:.75rem;color:var(--muted);padding:24px}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+
 <header>
-  <div class="sub">Wrknest · internt verktyg</div>
-  <h1>Kandidatpresentation – Admin</h1>
+  <div class="head-inner">
+    <div>
+      <div class="wordmark">Wrknest</div>
+      <h1 id="jobTitle">Laddar…</h1>
+    </div>
+    <div class="client-tag" id="clientTag" hidden></div>
+  </div>
 </header>
+
 <main>
-
-  <div class="panel" id="setupPanel">
-    <h2>Anslutning</h2>
-    <div class="row">
-      <div><label>Worker-URL</label><input type="text" id="workerUrl" placeholder="https://din-worker.ditt-konto.workers.dev"></div>
-      <div><label>Adminnyckel</label><input type="password" id="adminKey" placeholder="Din ADMIN_KEY"></div>
-    </div>
-    <button class="btn" onclick="connect()">Anslut</button>
-    <div class="msg" id="setupMsg"></div>
-  </div>
-
-  <div class="panel" id="createPanel" hidden>
-    <h2>Skapa ny presentationslänk</h2>
-    <div class="row">
-      <div><label>Jobb-ID i Teamtailor</label><input type="text" id="newJobId" placeholder="t.ex. 1234567"></div>
-      <div><label>Kundens namn</label><input type="text" id="newClient" placeholder="t.ex. Volvo CE"></div>
-    </div>
-    <button class="btn" id="createBtn" onclick="createProject()">Skapa länk</button>
-    <div class="msg" id="createMsg"></div>
-    <p style="font-size:.76rem;color:var(--muted);margin-top:10px">
-      Jobb-ID hittar du i webbadressen när du är inne på jobbet i Teamtailor.
-    </p>
-  </div>
-
-  <div class="panel" id="listPanel" hidden>
-    <h2>Aktiva presentationer</h2>
-    <div id="projectList"><em style="font-size:.85rem;color:var(--muted)">Laddar …</em></div>
-  </div>
-
+  <div id="content"><div class="loading">Hämtar kandidater …</div></div>
 </main>
 
+<footer>Presenterat av Wrknest · Innehållet är konfidentiellt och avsett endast för mottagaren.</footer>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" aria-label="Kandidatdetaljer"></aside>
+
 <script>
-let WORKER = localStorage.getItem("kpadmin_worker") || "";
-let KEY = sessionStorage.getItem("kpadmin_key") || "";
-const CUSTOMER_PAGE = location.href.replace(/admin\.html.*$/, "index.html"); // kundvyn ligger bredvid
+/* ================= KONFIG ================= */
+const WORKER_URL = "https://kandidatpresentation.jonathan-soderling.workers.dev";
+/* ========================================== */
 
-if(WORKER) document.getElementById("workerUrl").value = WORKER;
-if(WORKER && KEY) connect();
+const token = new URLSearchParams(location.search).get("p");
+let state = null;          // {jobTitle, client, stages, candidates, feedback, showContact}
+let activeStage = "all";
+let openCandidate = null;
 
-async function api(path, opts={}){
-  const res = await fetch(WORKER+path, {
-    ...opts,
-    headers:{ "Content-Type":"application/json", "x-admin-key":KEY, ...(opts.headers||{}) }
+const VERDICTS = [
+  {key:"meet", label:"Vill träffa"},
+  {key:"maybe", label:"Har frågor"},
+  {key:"no", label:"Inte aktuell"},
+];
+const verdictLabel = k => (VERDICTS.find(v=>v.key===k)||{}).label || "";
+
+init();
+
+async function init(){
+  if(!token){ fatal("Länken saknar projektkod. Kontrollera att du fått hela länken."); return; }
+  try{
+    const res = await fetch(`${WORKER_URL}/p/${token}`);
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || "Kunde inte hämta projektet.");
+    state = data;
+    document.getElementById("jobTitle").textContent = data.jobTitle;
+    document.title = data.jobTitle + " – Wrknest";
+    if(data.client){
+      const tag = document.getElementById("clientTag");
+      tag.textContent = "För " + data.client;
+      tag.hidden = false;
+    }
+    render();
+  }catch(e){ fatal(e.message); }
+}
+
+function fatal(msg){
+  document.getElementById("jobTitle").textContent = "Kandidatpresentation";
+  document.getElementById("content").innerHTML = `<div class="fatal">${esc(msg)}</div>`;
+}
+
+function render(){
+  const stages = state.stages;
+  const counts = {};
+  for(const c of state.candidates) counts[c.stageId] = (counts[c.stageId]||0)+1;
+
+  const pipeline = `
+    <div class="pipeline" role="tablist">
+      <button class="step all-step ${activeStage==="all"?"active":""}" onclick="setStage('all')">
+        <span class="count">${state.candidates.length}</span><span class="label">Alla kandidater</span>
+      </button>
+      ${stages.map(s=>`
+        <button class="step ${activeStage===s.id?"active":""}" onclick="setStage('${s.id}')">
+          <span class="count">${counts[s.id]||0}</span><span class="label">${esc(s.label)}</span>
+        </button>`).join("")}
+    </div>`;
+
+  const inScope = state.candidates.filter(c=>state.stages.some(s=>s.id===c.stageId));
+  const decided = inScope.filter(c=>state.feedback[c.id]&&state.feedback[c.id].verdict).length;
+  const pct = inScope.length ? Math.round(100*decided/inScope.length) : 0;
+  const progress = inScope.length ? `
+    <div class="progress-wrap">
+      <span class="progress-text">${decided===inScope.length
+        ? "Tack! Ni har tagit ställning till alla kandidater 🎉"
+        : `Ni har tagit ställning till ${decided} av ${inScope.length} kandidater`}</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>` : "";
+
+  const visible = state.candidates.filter(c=>{
+    if(activeStage==="all") return state.stages.some(s=>s.id===c.stageId);
+    return c.stageId===activeStage;
   });
-  const data = await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error || ("Fel "+res.status));
-  return data;
+
+  const cards = visible.length ? `<div class="grid">${visible.map((c,i)=>cardHtml(c,i)).join("")}</div>`
+    : `<div class="empty">Inga kandidater i det här steget ännu.</div>`;
+
+  document.getElementById("content").innerHTML = pipeline + progress + cards;
 }
 
-async function connect(){
-  WORKER = document.getElementById("workerUrl").value.trim().replace(/\/+$/,"");
-  KEY = document.getElementById("adminKey").value.trim() || KEY;
-  const msg = document.getElementById("setupMsg");
-  msg.textContent = "Ansluter …"; msg.className="msg";
-  try{
-    await api("/admin/projects");
-    localStorage.setItem("kpadmin_worker", WORKER);
-    sessionStorage.setItem("kpadmin_key", KEY);
-    msg.textContent = "Ansluten."; msg.className="msg ok";
-    document.getElementById("createPanel").hidden = false;
-    document.getElementById("listPanel").hidden = false;
-    loadProjects();
-  }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
-}
-
-async function createProject(){
-  const jobId = document.getElementById("newJobId").value.trim();
-  const client = document.getElementById("newClient").value.trim();
-  const msg = document.getElementById("createMsg");
-  const btn = document.getElementById("createBtn");
-  btn.disabled = true; msg.textContent = "Skapar – hämtar jobb och steg från Teamtailor …"; msg.className="msg";
-  try{
-    await api("/admin/project",{method:"POST",body:JSON.stringify({jobId, client})});
-    msg.textContent = "Klart! Länken finns i listan nedan."; msg.className="msg ok";
-    document.getElementById("newJobId").value=""; document.getElementById("newClient").value="";
-    loadProjects();
-  }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
-  btn.disabled = false;
-}
-
-async function loadProjects(){
-  const el = document.getElementById("projectList");
-  try{
-    const {projects} = await api("/admin/projects");
-    if(!projects.length){ el.innerHTML = "<em style='font-size:.85rem;color:var(--muted)'>Inga presentationer ännu.</em>"; return; }
-    el.innerHTML = projects.map(projectHtml).join("");
-  }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
-}
-
-function projectHtml(p){
-  const link = `${CUSTOMER_PAGE}?p=${p.token}`;
-  const viewed = p.lastViewedAt ? "Senast öppnad av kund: "+new Date(p.lastViewedAt).toLocaleString("sv-SE") : "Inte öppnad av kund ännu";
+function cardHtml(c, idx=0){
+  const name = fullName(c);
+  const stage = state.stages.find(s=>s.id===c.stageId);
+  const fb = state.feedback[c.id];
+  const verdict = fb && fb.verdict ? `<span class="verdict-dot ${fb.verdict}">${verdictLabel(fb.verdict)}</span>` : "";
   return `
-  <div class="project" id="proj-${p.token}">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+    <button class="card" style="animation-delay:${Math.min(idx*45,450)}ms" onclick="openDrawer('${c.id}')">
+      <div class="card-top">
+        <div class="avatar">${c.picture?`<img src="${esc(c.picture)}" alt="">`:initials(name)}</div>
+        <div>
+          <h3>${esc(name)}</h3>
+          <div class="stage-pill">${stage?esc(stage.label):""}</div>
+        </div>
+      </div>
+      ${(state.presentations||{})[c.id]||c.pitch?`<div class="pitch">${esc((state.presentations||{})[c.id]||c.pitch)}</div>`:""}
+      <div class="card-foot">
+        <span class="cv-chip ${c.hasCv?"":"none"}">${c.hasCv?"CV finns":"CV saknas"}</span>
+        ${verdict}
+      </div>
+    </button>`;
+}
+
+function setStage(id){ activeStage=id; render(); }
+
+/* ---------- Detaljpanel ---------- */
+function openDrawer(cid){
+  openCandidate = state.candidates.find(c=>c.id===cid);
+  if(!openCandidate) return;
+  renderDrawer();
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("drawer").classList.add("open");
+}
+
+function renderDrawer(){
+  const c = openCandidate;
+  const name = fullName(c);
+  const fb = state.feedback[c.id] || {verdict:null, notes:[]};
+  const stage = state.stages.find(s=>s.id===c.stageId);
+  const cvUrl = `${WORKER_URL}/p/${token}/cv/${c.id}`;
+
+  const contact = state.showContact ? `
+    <div class="panel"><h4>Kontakt</h4>
+      ${c.email?`<div class="contact-row"><span>E-post</span>${esc(c.email)}</div>`:""}
+      ${c.phone?`<div class="contact-row"><span>Telefon</span>${esc(c.phone)}</div>`:""}
+      ${c["linkedin-url"]?`<div class="contact-row"><span>LinkedIn</span><a href="${esc(c["linkedin-url"])}" target="_blank" rel="noopener">Profil</a></div>`:""}
+    </div>`:"";
+
+  document.getElementById("drawer").innerHTML = `
+    <div class="drawer-head">
       <div>
-        <h3>${esc(p.jobTitle)} ${p.client?`– ${esc(p.client)}`:""}</h3>
-        <div class="meta">Skapad ${new Date(p.createdAt).toLocaleDateString("sv-SE")} · ${viewed}</div>
+        <h2>${esc(name)}</h2>
+        <div class="sub">${stage?esc(stage.label):""}</div>
       </div>
-      <span class="badge ${p.active?"":"off"}">${p.active?"Aktiv":"Pausad"}</span>
+      <button class="close-btn" onclick="closeDrawer()" aria-label="Stäng">✕</button>
     </div>
-    <div class="linkbox"><span>${esc(link)}</span><button onclick="copyLink('${esc(link)}',this)">Kopiera</button></div>
-
-    <details>
-      <summary>Anpassa steg och inställningar</summary>
-      <div style="margin-top:10px">
-        <label>Jobbtitel som visas för kund</label>
-        <input type="text" value="${esc(p.displayTitle||p.jobTitle)}" onchange="toggleField('${p.token}','displayTitle',this.value)" style="margin-bottom:12px">
-        ${p.stages.map((s,i)=>`
-          <div class="stage-row">
-            <input type="checkbox" ${s.visible?"checked":""} data-token="${p.token}" data-i="${i}" data-field="visible" onchange="stageEdit(this)" title="Visa steget för kund">
-            <input type="text" value="${esc(s.label)}" data-token="${p.token}" data-i="${i}" data-field="label" onchange="stageEdit(this)">
-            <span class="tt" title="Namn i Teamtailor">${esc(s.ttName)}</span>
-          </div>`).join("")}
-        <div class="toggles">
-          <label><input type="checkbox" ${p.showContact?"checked":""} onchange="toggleField('${p.token}','showContact',this.checked)"> Visa kontaktuppgifter för kund</label>
-          <label><input type="checkbox" ${p.active?"checked":""} onchange="toggleField('${p.token}','active',this.checked)"> Länken aktiv</label>
-        </div>
-        <div class="actions">
-          <button class="btn ghost" onclick="saveStages('${p.token}')">Spara steg</button>
-          <button class="btn ghost" onclick="loadPresentations('${p.token}')">Kandidatpresentationer</button>
-          <button class="btn ghost" onclick="loadFeedback('${p.token}')">Visa kundens feedback</button>
-          <button class="btn danger" onclick="removeProject('${p.token}')">Ta bort</button>
-        </div>
-        <div id="pres-${p.token}"></div>
-        <div id="fb-${p.token}"></div>
+    <div class="drawer-body">
+      <div class="cv-frame-wrap">
+        ${c.hasCv ? `
+          <div class="cv-toolbar"><span>CV</span><a href="${cvUrl}" target="_blank" rel="noopener">Öppna i ny flik</a></div>
+          <iframe src="${cvUrl}" title="CV för ${esc(name)}"></iframe>`
+        : `<div class="cv-missing">Inget CV uppladdat.<br>Kontakta oss så skickar vi underlag.</div>`}
       </div>
-    </details>
-  </div>`;
-}
-
-const pendingStages = {};
-function stageEdit(input){
-  const t = input.dataset.token;
-  pendingStages[t] = pendingStages[t] || null; // markera att ändringar finns
-}
-async function saveStages(token){
-  const rows = document.querySelectorAll(`#proj-${token} .stage-row`);
-  const proj = (await api("/admin/projects")).projects.find(p=>p.token===token);
-  const stages = proj.stages.map((s,i)=>{
-    const row = rows[i];
-    return { ...s,
-      visible: row.querySelector('[data-field=visible]').checked,
-      label: row.querySelector('[data-field=label]').value.trim() || s.ttName };
-  });
-  await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({stages})});
-  loadProjects();
-}
-async function toggleField(token, field, value){
-  await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({[field]:value})});
-  loadProjects();
-}
-async function removeProject(token){
-  if(!confirm("Ta bort presentationen? Länken slutar fungera och kundens noteringar raderas.")) return;
-  await api(`/admin/project/${token}`,{method:"DELETE"});
-  loadProjects();
-}
-const nameCache = {}; // token -> {cid: namn}
-
-async function getCandidates(token){
-  const data = await api(`/admin/candidates/${token}`);
-  nameCache[token] = {};
-  for(const c of data.candidates) nameCache[token][c.id] = c.name;
-  return data;
-}
-
-async function loadPresentations(token){
-  const el = document.getElementById("pres-"+token);
-  el.innerHTML = "<em style='font-size:.8rem;color:var(--muted)'>Hämtar kandidater från Teamtailor …</em>";
-  try{
-    const {candidates, presentations} = await getCandidates(token);
-    if(!candidates.length){ el.innerHTML = "<div class='fb-cand'>Inga kandidater i jobbet ännu.</div>"; return; }
-    el.innerHTML = `
-      <p style="font-size:.78rem;color:var(--muted);margin:12px 0 4px">
-        Presentationen visas överst på kandidatens kort i kundvyn. Lämna tomt och spara för att ta bort.
-        "Generera utkast" bygger på kandidatens pitch och era interna anteckningar i Teamtailor –
-        <strong>läs alltid igenom och justera innan du sparar</strong>, det är först vid Spara som texten blir synlig för kund.
-      </p>` +
-      candidates.map(c=>`
-      <div class="fb-cand">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
-          <strong>${esc(c.name)}</strong><span style="font-size:.72rem;color:var(--muted)">${esc(c.stage)}</span>
+      <div class="side">
+        ${(state.presentations||{})[c.id]?`<div class="panel"><h4>Wrknests presentation</h4><div class="pitch-full">${esc(state.presentations[c.id])}</div></div>`:""}
+        ${c.pitch?`<div class="panel"><h4>Om kandidaten</h4><div class="pitch-full">${esc(c.pitch)}</div></div>`:""}
+        ${contact}
+        <div class="panel">
+          <h4>Ert omdöme</h4>
+          <div class="verdict-row">
+            ${VERDICTS.map(v=>`<button class="verdict-btn ${v.key} ${fb.verdict===v.key?"sel":""}" onclick="setVerdict('${v.key}')">${v.label}</button>`).join("")}
+          </div>
+          ${followupHtml(fb)}
         </div>
-        <textarea id="ptext-${token}-${c.id}" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.82rem;min-height:60px;margin-top:6px;resize:vertical"
-          placeholder="Wrknests presentation av ${esc(c.name)} för det här uppdraget …">${esc(presentations[c.id]||"")}</textarea>
-        <button class="btn ghost" style="margin-top:6px;padding:7px 14px;font-size:.8rem" onclick="savePres('${token}','${c.id}',this)">Spara</button>
-      </div>`).join("");
-  }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
+        <div class="panel">
+          <h4>Noteringar</h4>
+          <div id="notesList">${fb.notes.map(noteHtml).join("") || `<div class="note" style="color:var(--muted)">Inga noteringar ännu.</div>`}</div>
+          <div class="note-form">
+            <textarea id="noteText" placeholder="Skriv en notering till Wrknest …"></textarea>
+            <input id="noteAuthor" placeholder="Ditt namn" value="${esc(localStorage.getItem("kp_author")||"")}">
+            <button class="send-btn" id="noteSend" onclick="sendNote()">Spara notering</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
 }
 
-async function savePres(token, cid, btn){
-  const text = document.getElementById(`ptext-${token}-${cid}`).value;
+function noteHtml(n){
+  const d = new Date(n.at);
+  return `<div class="note"><div class="meta">${esc(n.author)} · ${d.toLocaleDateString("sv-SE")} ${d.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"})}</div>${esc(n.text)}</div>`;
+}
+
+function closeDrawer(){
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("drawer").classList.remove("open");
+  openCandidate=null;
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+
+async function setVerdict(key){
+  const c = openCandidate;
+  const fb = state.feedback[c.id] || {verdict:null, notes:[]};
+  const next = fb.verdict===key ? "" : key; // klick igen = avmarkera
+  const updated = await postFeedback({candidateId:c.id, verdict:next});
+  if(updated){
+    state.feedback[c.id]=updated;
+    if(next==="meet") confettiBurst();
+    renderDrawer(); render();
+  }
+}
+
+function confettiBurst(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors=["#ED7B4D","#F09E86","#F4D4E3","#3D2530"];
+  for(let i=0;i<36;i++){
+    const el=document.createElement("div");
+    el.className="confetti";
+    el.style.left=Math.random()*100+"vw";
+    el.style.background=colors[i%colors.length];
+    el.style.animationDuration=(1.4+Math.random()*1.2)+"s";
+    el.style.animationDelay=(Math.random()*.3)+"s";
+    el.style.borderRadius=Math.random()<.5?"50%":"2px";
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),3200);
+  }
+}
+
+function followupHtml(fb){
+  const v = fb.verdict;
+  if(v==="no" || v==="maybe"){
+    const ph = v==="no"
+      ? "Berätta gärna kort varför – det hjälper oss att träffa mer rätt framåt."
+      : "Vilka frågor eller funderingar har ni om kandidaten?";
+    return `<div class="fu">
+      <textarea id="fuReason" placeholder="${ph}">${esc(fb.reason||"")}</textarea>
+      <button class="send-btn" onclick="saveReason(this)">Skicka till Wrknest</button>
+    </div>`;
+  }
+  if(v==="meet"){
+    const m = fb.meeting||{};
+    const t = m.times||[];
+    return `<div class="fu">
+      <div class="hint">Föreslå upp till tre tider som passar er:</div>
+      <input type="datetime-local" id="fuT1" value="${esc(t[0]||"")}">
+      <input type="datetime-local" id="fuT2" value="${esc(t[1]||"")}">
+      <input type="datetime-local" id="fuT3" value="${esc(t[2]||"")}">
+      <div class="opts">
+        <label><input type="radio" name="fuFormat" value="live" ${m.format==="live"?"checked":""}> Träffas live</label>
+        <label><input type="radio" name="fuFormat" value="video" ${m.format!=="live"?"checked":""}> Video</label>
+      </div>
+      <div class="opts">
+        <label>Intervjuns längd:
+          <select id="fuDur">
+            ${["30","45","60","90"].map(d=>`<option value="${d}" ${String(m.duration||"60")===d?"selected":""}>${d} min</option>`).join("")}
+          </select>
+        </label>
+      </div>
+      <button class="send-btn" onclick="saveMeeting(this)">Skicka mötesförslag</button>
+    </div>`;
+  }
+  return "";
+}
+
+async function saveReason(btn){
+  btn.disabled=true; btn.textContent="Sparar …";
+  const updated = await postFeedback({candidateId:openCandidate.id, reason:document.getElementById("fuReason").value.trim()});
+  if(updated){ state.feedback[openCandidate.id]=updated; renderDrawer(); render(); }
+  else { btn.disabled=false; btn.textContent="Skicka till Wrknest"; }
+}
+
+async function saveMeeting(btn){
+  btn.disabled=true; btn.textContent="Sparar …";
+  const times = ["fuT1","fuT2","fuT3"].map(id=>document.getElementById(id).value).filter(Boolean);
+  const format = (document.querySelector('input[name=fuFormat]:checked')||{}).value || "video";
+  const duration = document.getElementById("fuDur").value;
+  const updated = await postFeedback({candidateId:openCandidate.id, meeting:{times, format, duration}});
+  if(updated){ state.feedback[openCandidate.id]=updated; renderDrawer(); render(); }
+  else { btn.disabled=false; btn.textContent="Skicka mötesförslag"; }
+}
+
+async function sendNote(){
+  const text = document.getElementById("noteText").value.trim();
+  const author = document.getElementById("noteAuthor").value.trim() || "Kund";
+  if(!text) return;
+  localStorage.setItem("kp_author", author);
+  const btn = document.getElementById("noteSend");
   btn.disabled = true; btn.textContent = "Sparar …";
+  const updated = await postFeedback({candidateId:openCandidate.id, note:text, author});
+  if(updated){ state.feedback[openCandidate.id]=updated; renderDrawer(); }
+  else { btn.disabled=false; btn.textContent="Spara notering"; }
+}
+
+async function postFeedback(payload){
   try{
-    await api(`/admin/presentation/${token}`,{method:"PUT",body:JSON.stringify({candidateId:cid, text})});
-    btn.textContent = "Sparad ✓";
-  }catch(e){ btn.textContent = "Fel: "+e.message; }
-  setTimeout(()=>{ btn.disabled=false; btn.textContent="Spara"; }, 1800);
+    const res = await fetch(`${WORKER_URL}/p/${token}/feedback`,{
+      method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error||"Kunde inte spara.");
+    return data.feedback;
+  }catch(e){ alert("Kunde inte spara: "+e.message); return null; }
 }
 
-async function genPres(token, cid, btn){
-  btn.disabled = true; const orig = btn.textContent; btn.textContent = "Genererar …";
-  try{
-    const {draft} = await api(`/admin/generate/${token}`,{method:"POST",body:JSON.stringify({candidateId:cid})});
-    document.getElementById(`ptext-${token}-${cid}`).value = draft;
-    btn.textContent = "Klart – granska & spara";
-  }catch(e){ btn.textContent = orig; alert(e.message); btn.disabled=false; return; }
-  setTimeout(()=>{ btn.disabled=false; btn.textContent=orig; }, 3000);
-}
-
-async function loadFeedback(token){
-  const el = document.getElementById("fb-"+token);
-  el.innerHTML = "<em style='font-size:.8rem;color:var(--muted)'>Hämtar …</em>";
-  const {feedback} = await api(`/admin/feedback/${token}`);
-  const VL = {meet:"Vill träffa", maybe:"Har frågor", no:"Inte aktuell"};
-  const entries = Object.entries(feedback);
-  if(!entries.length){ el.innerHTML = "<div class='fb-cand'>Ingen feedback från kund ännu.</div>"; return; }
-  if(!nameCache[token]){ try{ await getCandidates(token); }catch(e){ nameCache[token]={}; } }
-  const nameOf = cid => (nameCache[token]||{})[cid] || ("Kandidat-ID "+cid);
-  const fmtTime = t => { const d = new Date(t); return isNaN(d) ? t : d.toLocaleString("sv-SE",{dateStyle:"full",timeStyle:"short"}); };
-  el.innerHTML = entries.map(([cid,fb])=>`
-    <div class="fb-cand">
-      <div><strong>${esc(nameOf(cid))}</strong>: ${fb.verdict?`<span class="v ${fb.verdict}">${VL[fb.verdict]}</span>`:"<span style='color:var(--muted)'>inget omdöme</span>"}</div>
-      ${fb.reason?`<div class="fb-note"><div class="meta">${fb.verdict==="no"?"Motivering":"Frågor/kommentar"}</div>${esc(fb.reason)}</div>`:""}
-      ${fb.meeting&&(fb.meeting.times||[]).length?`<div class="fb-note"><div class="meta">Mötesförslag · ${fb.meeting.format==="live"?"Live":"Video"}${fb.meeting.duration?" · "+esc(fb.meeting.duration)+" min":""}</div>${fb.meeting.times.map(t=>esc(fmtTime(t))).join("<br>")}</div>`:""}
-      ${(fb.notes||[]).map(n=>`<div class="fb-note"><div class="meta">${esc(n.author)} · ${new Date(n.at).toLocaleString("sv-SE")}</div>${esc(n.text)}</div>`).join("")}
-    </div>`).join("");
-}
-
-function copyLink(link, btn){
-  navigator.clipboard.writeText(link).then(()=>{ btn.textContent="Kopierad!"; setTimeout(()=>btn.textContent="Kopiera",1500); });
-}
+/* ---------- Hjälpare ---------- */
+function fullName(c){ return [c["first-name"],c["last-name"]].filter(Boolean).join(" ") || "Kandidat"; }
+function initials(n){ return n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
 function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 </script>
 </body>
