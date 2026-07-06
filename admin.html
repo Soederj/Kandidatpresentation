@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Kandidatpresentation – Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-ink:#12242F; --brand-accent:#0E8F6E; --brand-accent-soft:#E3F4EE;
+    --paper:#fff; --bg:#F4F6F5; --line:#E2E7E5; --text:#28343B; --muted:#69787F;
+    --good:#0E8F6E; --mid:#C77E1F; --bad:#B4443C; --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+  button{font-family:inherit;cursor:pointer}
+  header{background:var(--brand-ink);color:#fff;padding:20px 28px}
+  header h1{font-family:'Bricolage Grotesque',sans-serif;font-size:1.3rem;font-weight:600}
+  header .sub{font-size:.78rem;opacity:.7;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+  main{max-width:920px;margin:0 auto;padding:24px 28px 80px;display:flex;flex-direction:column;gap:18px}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .panel h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.05rem;font-weight:600;color:var(--brand-ink);margin-bottom:12px}
+  label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin:10px 0 4px}
+  input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.9rem}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:180px}
+  .btn{background:var(--brand-accent);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:600;font-size:.88rem;margin-top:12px}
+  .btn.ghost{background:var(--paper);color:var(--text);border:1px solid var(--line)}
+  .btn.danger{background:#F9E8E7;color:var(--bad)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .msg{margin-top:10px;font-size:.84rem}
+  .msg.err{color:var(--bad)} .msg.ok{color:var(--good)}
+  .project{border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px;background:var(--paper)}
+  .project h3{font-family:'Bricolage Grotesque',sans-serif;font-size:1rem;color:var(--brand-ink)}
+  .project .meta{font-size:.78rem;color:var(--muted);margin:4px 0 10px}
+  .linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.8rem;word-break:break-all}
+  .linkbox button{flex-shrink:0;border:none;background:var(--brand-accent);color:#fff;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:600}
+  .stage-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:.84rem}
+  .stage-row input[type=text]{flex:1;padding:7px 10px;font-size:.84rem}
+  .stage-row .tt{color:var(--muted);font-size:.74rem;width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toggles{display:flex;gap:18px;margin-top:10px;font-size:.84rem;flex-wrap:wrap}
+  .toggles label{display:flex;align-items:center;gap:6px;margin:0;font-weight:400;color:var(--text);font-size:.84rem}
+  details{margin-top:10px}
+  summary{cursor:pointer;font-size:.84rem;font-weight:600;color:var(--brand-accent)}
+  .fb-cand{border-top:1px solid var(--line);padding:10px 0;font-size:.84rem}
+  .fb-cand .v{font-weight:600}
+  .v.meet{color:var(--good)} .v.maybe{color:var(--mid)} .v.no{color:var(--bad)}
+  .fb-note{margin-top:4px;padding-left:12px;border-left:2px solid var(--line);font-size:.8rem}
+  .fb-note .meta{color:var(--muted);font-size:.72rem}
+  .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .badge{font-size:.72rem;padding:3px 10px;border-radius:999px;background:var(--brand-accent-soft);color:var(--brand-accent);font-weight:600}
+  .badge.off{background:#F1F1F1;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="sub">Wrknest · internt verktyg</div>
+  <h1>Kandidatpresentation – Admin</h1>
+</header>
+<main>
+
+  <div class="panel" id="setupPanel">
+    <h2>Anslutning</h2>
+    <div class="row">
+      <div><label>Worker-URL</label><input type="text" id="workerUrl" placeholder="https://din-worker.ditt-konto.workers.dev"></div>
+      <div><label>Adminnyckel</label><input type="password" id="adminKey" placeholder="Din ADMIN_KEY"></div>
+    </div>
+    <button class="btn" onclick="connect()">Anslut</button>
+    <div class="msg" id="setupMsg"></div>
+  </div>
+
+  <div class="panel" id="createPanel" hidden>
+    <h2>Skapa ny presentationslänk</h2>
+    <div class="row">
+      <div><label>Jobb-ID i Teamtailor</label><input type="text" id="newJobId" placeholder="t.ex. 1234567"></div>
+      <div><label>Kundens namn</label><input type="text" id="newClient" placeholder="t.ex. Volvo CE"></div>
+    </div>
+    <button class="btn" id="createBtn" onclick="createProject()">Skapa länk</button>
+    <div class="msg" id="createMsg"></div>
+    <p style="font-size:.76rem;color:var(--muted);margin-top:10px">
+      Jobb-ID hittar du i webbadressen när du är inne på jobbet i Teamtailor.
+    </p>
+  </div>
+
+  <div class="panel" id="listPanel" hidden>
+    <h2>Aktiva presentationer</h2>
+    <div id="projectList"><em style="font-size:.85rem;color:var(--muted)">Laddar …</em></div>
+  </div>
+
+</main>
+
+<script>
+let WORKER = localStorage.getItem("kpadmin_worker") || "";
+let KEY = sessionStorage.getItem("kpadmin_key") || "";
+const CUSTOMER_PAGE = location.href.replace(/admin\.html.*$/, "index.html"); // kundvyn ligger bredvid
+
+if(WORKER) document.getElementById("workerUrl").value = WORKER;
+if(WORKER && KEY) connect();
+
+async function api(path, opts={}){
+  const res = await fetch(WORKER+path, {
+    ...opts,
+    headers:{ "Content-Type":"application/json", "x-admin-key":KEY, ...(opts.headers||{}) }
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || ("Fel "+res.status));
+  return data;
+}
+
+async function connect(){
+  WORKER = document.getElementById("workerUrl").value.trim().replace(/\/+$/,"");
+  KEY = document.getElementById("adminKey").value.trim() || KEY;
+  const msg = document.getElementById("setupMsg");
+  msg.textContent = "Ansluter …"; msg.className="msg";
+  try{
+    await api("/admin/projects");
+    localStorage.setItem("kpadmin_worker", WORKER);
+    sessionStorage.setItem("kpadmin_key", KEY);
+    msg.textContent = "Ansluten."; msg.className="msg ok";
+    document.getElementById("createPanel").hidden = false;
+    document.getElementById("listPanel").hidden = false;
+    loadProjects();
+  }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
+}
+
+async function createProject(){
+  const jobId = document.getElementById("newJobId").value.trim();
+  const client = document.getElementById("newClient").value.trim();
+  const msg = document.getElementById("createMsg");
+  const btn = document.getElementById("createBtn");
+  btn.disabled = true; msg.textContent = "Skapar – hämtar jobb och steg från Teamtailor …"; msg.className="msg";
+  try{
+    await api("/admin/project",{method:"POST",body:JSON.stringify({jobId, client})});
+    msg.textContent = "Klart! Länken finns i listan nedan."; msg.className="msg ok";
+    document.getElementById("newJobId").value=""; document.getElementById("newClient").value="";
+    loadProjects();
+  }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
+  btn.disabled = false;
+}
+
+async function loadProjects(){
+  const el = document.getElementById("projectList");
+  try{
+    const {projects} = await api("/admin/projects");
+    if(!projects.length){ el.innerHTML = "<em style='font-size:.85rem;color:var(--muted)'>Inga presentationer ännu.</em>"; return; }
+    el.innerHTML = projects.map(projectHtml).join("");
+  }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
+}
+
+function projectHtml(p){
+  const link = `${CUSTOMER_PAGE}?p=${p.token}`;
+  const viewed = p.lastViewedAt ? "Senast öppnad av kund: "+new Date(p.lastViewedAt).toLocaleString("sv-SE") : "Inte öppnad av kund ännu";
+  return `
+  <div class="project" id="proj-${p.token}">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+      <div>
+        <h3>${esc(p.jobTitle)} ${p.client?`– ${esc(p.client)}`:""}</h3>
+        <div class="meta">Skapad ${new Date(p.createdAt).toLocaleDateString("sv-SE")} · ${viewed}</div>
+      </div>
+      <span class="badge ${p.active?"":"off"}">${p.active?"Aktiv":"Pausad"}</span>
+    </div>
+    <div class="linkbox"><span>${esc(link)}</span><button onclick="copyLink('${esc(link)}',this)">Kopiera</button></div>
+
+    <details>
+      <summary>Anpassa steg och inställningar</summary>
+      <div style="margin-top:10px">
+        ${p.stages.map((s,i)=>`
+          <div class="stage-row">
+            <input type="checkbox" ${s.visible?"checked":""} data-token="${p.token}" data-i="${i}" data-field="visible" onchange="stageEdit(this)" title="Visa steget för kund">
+            <input type="text" value="${esc(s.label)}" data-token="${p.token}" data-i="${i}" data-field="label" onchange="stageEdit(this)">
+            <span class="tt" title="Namn i Teamtailor">${esc(s.ttName)}</span>
+          </div>`).join("")}
+        <div class="toggles">
+          <label><input type="checkbox" ${p.showContact?"checked":""} onchange="toggleField('${p.token}','showContact',this.checked)"> Visa kontaktuppgifter för kund</label>
+          <label><input type="checkbox" ${p.active?"checked":""} onchange="toggleField('${p.token}','active',this.checked)"> Länken aktiv</label>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" onclick="saveStages('${p.token}')">Spara steg</button>
+          <button class="btn ghost" onclick="loadFeedback('${p.token}')">Visa kundens feedback</button>
+          <button class="btn danger" onclick="removeProject('${p.token}')">Ta bort</button>
+        </div>
+        <div id="fb-${p.token}"></div>
+      </div>
+    </details>
+  </div>`;
+}
+
+const pendingStages = {};
+function stageEdit(input){
+  const t = input.dataset.token;
+  pendingStages[t] = pendingStages[t] || null; // markera att ändringar finns
+}
+async function saveStages(token){
+  const rows = document.querySelectorAll(`#proj-${token} .stage-row`);
+  const proj = (await api("/admin/projects")).projects.find(p=>p.token===token);
+  const stages = proj.stages.map((s,i)=>{
+    const row = rows[i];
+    return { ...s,
+      visible: row.querySelector('[data-field=visible]').checked,
+      label: row.querySelector('[data-field=label]').value.trim() || s.ttName };
+  });
+  await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({stages})});
+  loadProjects();
+}
+async function toggleField(token, field, value){
+  await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({[field]:value})});
+  loadProjects();
+}
+async function removeProject(token){
+  if(!confirm("Ta bort presentationen? Länken slutar fungera och kundens noteringar raderas.")) return;
+  await api(`/admin/project/${token}`,{method:"DELETE"});
+  loadProjects();
+}
+async function loadFeedback(token){
+  const el = document.getElementById("fb-"+token);
+  el.innerHTML = "<em style='font-size:.8rem;color:var(--muted)'>Hämtar …</em>";
+  const {feedback} = await api(`/admin/feedback/${token}`);
+  const VL = {meet:"Vill träffa", maybe:"Har frågor", no:"Inte aktuell"};
+  const entries = Object.entries(feedback);
+  if(!entries.length){ el.innerHTML = "<div class='fb-cand'>Ingen feedback från kund ännu.</div>"; return; }
+  el.innerHTML = entries.map(([cid,fb])=>`
+    <div class="fb-cand">
+      <div>Kandidat-ID ${cid}: ${fb.verdict?`<span class="v ${fb.verdict}">${VL[fb.verdict]}</span>`:"<span style='color:var(--muted)'>inget omdöme</span>"}</div>
+      ${(fb.notes||[]).map(n=>`<div class="fb-note"><div class="meta">${esc(n.author)} · ${new Date(n.at).toLocaleString("sv-SE")}</div>${esc(n.text)}</div>`).join("")}
+    </div>`).join("");
+}
+
+function copyLink(link, btn){
+  navigator.clipboard.writeText(link).then(()=>{ btn.textContent="Kopierad!"; setTimeout(()=>btn.textContent="Kopiera",1500); });
+}
+function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+</script>
+</body>
+</html>
