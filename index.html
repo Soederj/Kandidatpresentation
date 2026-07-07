@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Kandidatpresentation – Wrknest</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23F4D4E3'/><text x='50' y='74' font-size='62' font-weight='700' text-anchor='middle' font-family='Arial,sans-serif' fill='%23ED7B4D'>W.</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -37,7 +38,27 @@
   .head-inner{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
   .wordmark{font-family:var(--font-display);font-weight:700;font-size:1.05rem;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-accent)}
   h1{font-family:var(--font-display);font-weight:600;font-size:1.7rem;margin-top:6px;line-height:1.2}
+  .intro{font-size:.85rem;color:var(--muted);margin-top:8px}
   .client-tag{font-size:.85rem;background:var(--paper);color:var(--brand-ink);padding:6px 14px;border-radius:999px;white-space:nowrap}
+
+  /* ---------- Skeleton-laddning ---------- */
+  .skel{background:linear-gradient(90deg,#F7E7EF 25%,#FDF6FA 45%,#F7E7EF 65%);background-size:200% 100%;animation:shimmer 1.3s infinite;border-radius:8px}
+  @keyframes shimmer{to{background-position:-200% 0}}
+  .skel-card{pointer-events:none}
+
+  /* ---------- Drawer-navigering & omdömes-pop ---------- */
+  .drawer-nav{display:flex;gap:8px;flex-shrink:0}
+  .close-btn:disabled{opacity:.35;cursor:default}
+  @keyframes pop{50%{transform:scale(1.1)}}
+  .verdict-btn.sel{animation:pop .22s ease}
+
+  /* ---------- Kvittens ---------- */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);background:var(--brand-ink);color:#fff;
+         padding:11px 20px;border-radius:999px;font-size:.85rem;font-weight:600;opacity:0;
+         transition:opacity .25s, transform .25s;z-index:120;box-shadow:0 8px 24px rgba(61,37,48,.25);pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .receipt{margin-top:10px;font-size:.74rem;color:var(--muted)}
+  .receipt .read{color:var(--good);font-weight:600}
 
   main{max-width:1180px;margin:0 auto;padding:26px 28px 60px}
 
@@ -153,6 +174,7 @@
     <div>
       <div class="wordmark">Wrknest</div>
       <h1 id="jobTitle">Laddar…</h1>
+      <div class="intro" id="introHint" hidden>Klicka på en kandidat för att läsa mer, se CV och lämna ert omdöme.</div>
     </div>
     <div class="client-tag" id="clientTag" hidden></div>
   </div>
@@ -173,9 +195,11 @@ const WORKER_URL = "https://kandidatpresentation.jonathan-soderling.workers.dev"
 /* ========================================== */
 
 const token = new URLSearchParams(location.search).get("p");
-let state = null;          // {jobTitle, client, stages, candidates, feedback, showContact}
+let state = null;          // {jobTitle, client, stages, candidates, feedback, presentations, showContact}
 let activeStage = "all";
 let openCandidate = null;
+let currentList = [];      // senast renderade kandidatlistan (för bläddring i panelen)
+let celebrated = null;     // null = ej initierad; konfetti bara när 100 % nås under sessionen
 
 const VERDICTS = [
   {key:"meet", label:"Vill träffa"},
@@ -188,6 +212,7 @@ init();
 
 async function init(){
   if(!token){ fatal("Länken saknar projektkod. Kontrollera att du fått hela länken."); return; }
+  document.getElementById("content").innerHTML = skeletonHtml();
   try{
     const res = await fetch(`${WORKER_URL}/p/${token}`);
     const data = await res.json();
@@ -195,13 +220,30 @@ async function init(){
     state = data;
     document.getElementById("jobTitle").textContent = data.jobTitle;
     document.title = data.jobTitle + " – Wrknest";
+    document.getElementById("introHint").hidden = false;
     if(data.client){
       const tag = document.getElementById("clientTag");
       tag.textContent = "För " + data.client;
       tag.hidden = false;
     }
+    // Sortera kandidaterna i processordning, sedan på namn
+    const order = {}; state.stages.forEach((s,i)=>order[s.id]=i);
+    state.candidates.sort((a,b)=>{
+      const d = (order[a.stageId]??99)-(order[b.stageId]??99);
+      return d !== 0 ? d : fullName(a).localeCompare(fullName(b),"sv");
+    });
     render();
   }catch(e){ fatal(e.message); }
+}
+
+function skeletonHtml(){
+  const card = `<div class="card skel-card">
+    <div class="skel" style="width:52px;height:52px;border-radius:50%"></div>
+    <div class="skel" style="height:14px;width:70%"></div>
+    <div class="skel" style="height:10px;width:90%"></div>
+    <div class="skel" style="height:10px;width:55%"></div>
+  </div>`;
+  return `<div class="skel" style="height:64px;border-radius:10px;margin-bottom:26px"></div><div class="grid">${card.repeat(6)}</div>`;
 }
 
 function fatal(msg){
@@ -228,9 +270,12 @@ function render(){
   const inScope = state.candidates.filter(c=>state.stages.some(s=>s.id===c.stageId));
   const decided = inScope.filter(c=>state.feedback[c.id]&&state.feedback[c.id].verdict).length;
   const pct = inScope.length ? Math.round(100*decided/inScope.length) : 0;
+  const done = inScope.length>0 && decided===inScope.length;
+  if(celebrated===null) celebrated = done;           // redan klart vid sidladdning → ingen salut
+  else if(!celebrated && done){ confettiBurst(); confettiBurst(); celebrated = true; }
   const progress = inScope.length ? `
     <div class="progress-wrap">
-      <span class="progress-text">${decided===inScope.length
+      <span class="progress-text">${done
         ? "Tack! Ni har tagit ställning till alla kandidater 🎉"
         : `Ni har tagit ställning till ${decided} av ${inScope.length} kandidater`}</span>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -240,6 +285,7 @@ function render(){
     if(activeStage==="all") return state.stages.some(s=>s.id===c.stageId);
     return c.stageId===activeStage;
   });
+  currentList = visible;
 
   const cards = visible.length ? `<div class="grid">${visible.map((c,i)=>cardHtml(c,i)).join("")}</div>`
     : `<div class="empty">Inga kandidater i det här steget ännu.</div>`;
@@ -294,13 +340,23 @@ function renderDrawer(){
       ${c["linkedin-url"]?`<div class="contact-row"><span>LinkedIn</span><a href="${esc(c["linkedin-url"])}" target="_blank" rel="noopener">Profil</a></div>`:""}
     </div>`:"";
 
+  const idx = currentList.findIndex(x=>x.id===c.id);
+  const total = currentList.length;
+
   document.getElementById("drawer").innerHTML = `
     <div class="drawer-head">
-      <div>
-        <h2>${esc(name)}</h2>
-        <div class="sub">${stage?esc(stage.label):""}</div>
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <div class="avatar">${c.picture?`<img src="${esc(c.picture)}" alt="">`:initials(name)}</div>
+        <div style="min-width:0">
+          <h2>${esc(name)}</h2>
+          <div class="sub">${stage?esc(stage.label):""}${total>1?` · Kandidat ${idx+1} av ${total}`:""}</div>
+        </div>
       </div>
-      <button class="close-btn" onclick="closeDrawer()" aria-label="Stäng">✕</button>
+      <div class="drawer-nav">
+        <button class="close-btn" onclick="navCandidate(-1)" aria-label="Föregående kandidat" ${idx>0?"":"disabled"}>‹</button>
+        <button class="close-btn" onclick="navCandidate(1)" aria-label="Nästa kandidat" ${idx>=0&&idx<total-1?"":"disabled"}>›</button>
+        <button class="close-btn" onclick="closeDrawer()" aria-label="Stäng">✕</button>
+      </div>
     </div>
     <div class="drawer-body">
       <div class="cv-frame-wrap">
@@ -319,6 +375,7 @@ function renderDrawer(){
             ${VERDICTS.map(v=>`<button class="verdict-btn ${v.key} ${fb.verdict===v.key?"sel":""}" onclick="setVerdict('${v.key}')">${v.label}</button>`).join("")}
           </div>
           ${followupHtml(fb)}
+          ${receiptHtml(fb)}
         </div>
         <div class="panel">
           <h4>Noteringar</h4>
@@ -338,12 +395,44 @@ function noteHtml(n){
   return `<div class="note"><div class="meta">${esc(n.author)} · ${d.toLocaleDateString("sv-SE")} ${d.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"})}</div>${esc(n.text)}</div>`;
 }
 
+function navCandidate(dir){
+  if(!openCandidate) return;
+  const idx = currentList.findIndex(x=>x.id===openCandidate.id);
+  const next = currentList[idx+dir];
+  if(next) openDrawer(next.id);
+}
+
 function closeDrawer(){
   document.getElementById("overlay").classList.remove("open");
   document.getElementById("drawer").classList.remove("open");
   openCandidate=null;
 }
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") closeDrawer();
+  if(openCandidate && (e.target.tagName!=="TEXTAREA" && e.target.tagName!=="INPUT" && e.target.tagName!=="SELECT")){
+    if(e.key==="ArrowLeft") navCandidate(-1);
+    if(e.key==="ArrowRight") navCandidate(1);
+  }
+});
+
+function receiptHtml(fb){
+  if(!fb.updatedAt) return "";
+  const sent = `Skickat till Wrknest ${fmtShort(fb.updatedAt)} ✓`;
+  return `<div class="receipt">${fb.seenAt ? sent + `<span class="read"> · Läst av Wrknest ✓✓</span>` : sent}</div>`;
+}
+
+function fmtShort(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString("sv-SE",{day:"numeric",month:"short"}) + " " + d.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+}
+
+function toast(msg){
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add("show"));
+  setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(), 300); }, 2600);
+}
 
 async function setVerdict(key){
   const c = openCandidate;
@@ -353,6 +442,7 @@ async function setVerdict(key){
   if(updated){
     state.feedback[c.id]=updated;
     if(next==="meet") confettiBurst();
+    toast("Skickat till Wrknest ✓");
     renderDrawer(); render();
   }
 }
@@ -412,7 +502,7 @@ function followupHtml(fb){
 async function saveReason(btn){
   btn.disabled=true; btn.textContent="Sparar …";
   const updated = await postFeedback({candidateId:openCandidate.id, reason:document.getElementById("fuReason").value.trim()});
-  if(updated){ state.feedback[openCandidate.id]=updated; renderDrawer(); render(); }
+  if(updated){ state.feedback[openCandidate.id]=updated; toast("Skickat till Wrknest ✓"); renderDrawer(); render(); }
   else { btn.disabled=false; btn.textContent="Skicka till Wrknest"; }
 }
 
@@ -422,7 +512,7 @@ async function saveMeeting(btn){
   const format = (document.querySelector('input[name=fuFormat]:checked')||{}).value || "video";
   const duration = document.getElementById("fuDur").value;
   const updated = await postFeedback({candidateId:openCandidate.id, meeting:{times, format, duration}});
-  if(updated){ state.feedback[openCandidate.id]=updated; renderDrawer(); render(); }
+  if(updated){ state.feedback[openCandidate.id]=updated; toast("Mötesförslag skickat till Wrknest ✓"); renderDrawer(); render(); }
   else { btn.disabled=false; btn.textContent="Skicka mötesförslag"; }
 }
 
@@ -434,7 +524,7 @@ async function sendNote(){
   const btn = document.getElementById("noteSend");
   btn.disabled = true; btn.textContent = "Sparar …";
   const updated = await postFeedback({candidateId:openCandidate.id, note:text, author});
-  if(updated){ state.feedback[openCandidate.id]=updated; renderDrawer(); }
+  if(updated){ state.feedback[openCandidate.id]=updated; toast("Notering skickad till Wrknest ✓"); renderDrawer(); }
   else { btn.disabled=false; btn.textContent="Spara notering"; }
 }
 
