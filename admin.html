@@ -95,7 +95,7 @@
 <script>
 let WORKER = localStorage.getItem("kpadmin_worker") || "";
 let KEY = sessionStorage.getItem("kpadmin_key") || "";
-const CUSTOMER_PAGE = location.href.replace(/admin\.html.*$/, "index.html"); // kundvyn ligger bredvid
+const CUSTOMER_PAGE = new URL("index.html", location.href).href; // kundvyn ligger alltid bredvid adminfilen
 
 if(WORKER) document.getElementById("workerUrl").value = WORKER;
 if(WORKER && KEY) connect();

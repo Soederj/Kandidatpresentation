@@ -359,10 +359,8 @@ function renderDrawer(){
       </div>
     </div>
     <div class="drawer-body">
-      <div class="cv-frame-wrap">
-        ${c.hasCv ? `
-          <div class="cv-toolbar"><span>CV</span><a href="${cvUrl}" target="_blank" rel="noopener">Öppna i ny flik</a></div>
-          <iframe src="${cvUrl}" title="CV för ${esc(name)}"></iframe>`
+      <div class="cv-frame-wrap" id="cvArea">
+        ${c.hasCv ? `<div class="cv-missing">Hämtar CV …</div>`
         : `<div class="cv-missing">Inget CV uppladdat.<br>Kontakta oss så skickar vi underlag.</div>`}
       </div>
       <div class="side">
@@ -388,6 +386,47 @@ function renderDrawer(){
         </div>
       </div>
     </div>`;
+  if(c.hasCv) loadCv(c, cvUrl);
+}
+
+let cvObjectUrl = null;
+async function loadCv(c, cvUrl){
+  try{
+    const res = await fetch(cvUrl);
+    if(!res.ok){
+      let msg = "Kunde inte hämta CV:t just nu.";
+      try{ msg = (await res.json()).error || msg; }catch(e){}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const head = new Uint8Array(await blob.slice(0,5).arrayBuffer());
+    const sig = String.fromCharCode.apply(null, head);
+    const isPdf = sig.startsWith("%PDF");
+    const isZip = sig.startsWith("PK"); // t.ex. Word-filer (.docx)
+
+    // Kandidaten kan ha hunnit bytas medan filen laddades
+    if(!openCandidate || openCandidate.id !== c.id) return;
+    const area = document.getElementById("cvArea");
+    if(!area) return;
+
+    if(cvObjectUrl) URL.revokeObjectURL(cvObjectUrl);
+    if(isPdf){
+      cvObjectUrl = URL.createObjectURL(blob.slice(0, blob.size, "application/pdf"));
+      area.innerHTML = `
+        <div class="cv-toolbar"><span>CV</span><a href="${cvObjectUrl}" target="_blank" rel="noopener">Öppna i ny flik</a></div>
+        <iframe src="${cvObjectUrl}" title="CV för ${esc(fullName(c))}"></iframe>`;
+    } else {
+      const fname = "CV - " + fullName(c) + (isZip ? ".docx" : "");
+      cvObjectUrl = URL.createObjectURL(blob);
+      area.innerHTML = `
+        <div class="cv-missing">CV:t är i ett format som inte kan förhandsvisas i webbläsaren.<br><br>
+        <a class="send-btn" style="display:inline-block;width:auto;text-decoration:none;padding:10px 22px" href="${cvObjectUrl}" download="${esc(fname)}">Ladda ner CV</a></div>`;
+    }
+  }catch(e){
+    if(!openCandidate || openCandidate.id !== c.id) return;
+    const area = document.getElementById("cvArea");
+    if(area) area.innerHTML = `<div class="cv-missing">${esc(e.message)}</div>`;
+  }
 }
 
 function noteHtml(n){
