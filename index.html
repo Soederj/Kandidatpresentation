@@ -34,21 +34,40 @@
   button{font-family:inherit;cursor:pointer}
 
   /* ============================================================
-     TEMA: WRKNEST ENGINEERING – mörk header, orange accent
+     TEMA: WRKNEST ENGINEERING – genomgående mörkt, orange accent
      (färger hämtade från wrknestengineering-sajten)
      ============================================================ */
   body.theme-engineering{
-    --brand-ink:#171C24;
-    --brand-pink:#12161D;        /* header-bakgrund i detta tema */
+    --brand-ink:#F2F5F8;         /* rubriker blir ljusa i mörkt tema */
+    --brand-pink:#12161D;        /* header-bakgrund */
     --brand-accent:#FF690B;
-    --brand-accent-soft:#FFE6D3;
+    --brand-accent-soft:#33231A; /* mörk orangeton för chips/avatarer */
     --brand-salmon:#FF9A5C;
-    --bg:#F4F5F7; --line:#E2E5EA; --text:#232A32; --muted:#6B7480;
+    --paper:#1A212B; --bg:#0F141B; --line:#2A3340;
+    --text:#E6EAEF; --muted:#95A0AC;
+    --good:#3FCF8E; --mid:#F0AC4E; --bad:#F87171;
   }
   body.theme-engineering header{color:#fff}
   body.theme-engineering .wordmark{color:#fff}
   body.theme-engineering .intro{color:rgba(255,255,255,.72)}
-  body.theme-engineering .overlay{background:rgba(10,14,20,.5)}
+  body.theme-engineering .client-tag{background:#F0C5D8;color:#12161D}
+  body.theme-engineering .overlay{background:rgba(5,8,12,.6)}
+  body.theme-engineering .cv-chip{color:#FF8B42}
+  body.theme-engineering .cv-chip.none{background:#232C38;color:var(--muted)}
+  body.theme-engineering .avatar{color:#FF8B42}
+  body.theme-engineering .verdict-dot.meet{background:#16342A}
+  body.theme-engineering .verdict-dot.maybe{background:#38290F}
+  body.theme-engineering .verdict-dot.no{background:#3A1D1D}
+  body.theme-engineering .verdict-btn.meet.sel{background:#16342A;border-color:var(--good)}
+  body.theme-engineering .verdict-btn.maybe.sel{background:#38290F;border-color:var(--mid)}
+  body.theme-engineering .verdict-btn.no.sel{background:#3A1D1D;border-color:var(--bad)}
+  body.theme-engineering .card:hover{box-shadow:0 8px 22px rgba(0,0,0,.45)}
+  body.theme-engineering .toast{background:var(--brand-accent);color:#12161D}
+  body.theme-engineering .skel{background:linear-gradient(90deg,#1A212B 25%,#242E3B 45%,#1A212B 65%);background-size:200% 100%}
+  body.theme-engineering textarea,
+  body.theme-engineering input[type=datetime-local],
+  body.theme-engineering .note-form input,
+  body.theme-engineering select{background:#12161D;color:var(--text);border-color:var(--line)}
   .wm-sub{display:block;font-size:.52em;letter-spacing:.55em;font-weight:400;margin-top:3px}
 
   /* ---------- Header ---------- */
@@ -554,10 +573,10 @@ function followupHtml(fb){
     const m = fb.meeting||{};
     const t = m.times||[];
     return `<div class="fu">
-      <div class="hint">Föreslå upp till tre tider som passar er:</div>
-      <input type="datetime-local" id="fuT1" value="${esc(t[0]||"")}">
-      <input type="datetime-local" id="fuT2" value="${esc(t[1]||"")}">
-      <input type="datetime-local" id="fuT3" value="${esc(t[2]||"")}">
+      <div class="hint">Föreslå upp till tre tider som passar er (kvartssteg):</div>
+      <input type="datetime-local" id="fuT1" step="900" value="${esc(t[0]||"")}">
+      <input type="datetime-local" id="fuT2" step="900" value="${esc(t[1]||"")}">
+      <input type="datetime-local" id="fuT3" step="900" value="${esc(t[2]||"")}">
       <div class="opts">
         <label><input type="radio" name="fuFormat" value="live" ${m.format==="live"?"checked":""}> Träffas live</label>
         <label><input type="radio" name="fuFormat" value="video" ${m.format!=="live"?"checked":""}> Video</label>

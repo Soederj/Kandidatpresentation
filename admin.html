@@ -179,12 +179,12 @@ function projectHtml(p){
       </div>
       <span style="display:flex;gap:6px;align-items:center;flex-shrink:0">
         <span class="badge alert" id="unread-${p.token}" hidden></span>
-        <span class="badge ${p.active?"":"off"}">${p.active?"Aktiv":"Pausad"}</span>
+        <span class="badge ${p.active?"":"off"}" id="active-${p.token}">${p.active?"Aktiv":"Pausad"}</span>
       </span>
     </div>
     <div class="linkbox"><span>${esc(link)}</span><a class="openlink" href="${esc(link)}" target="_blank" rel="noopener">Öppna</a><button onclick="copyLink('${esc(link)}',this)">Kopiera</button></div>
 
-    <details>
+    <details ${openDetails.has(p.token)?"open":""} ontoggle="detailsToggled('${p.token}',this.open)">
       <summary>Anpassa steg och inställningar</summary>
       <div style="margin-top:10px">
         <label>Jobbtitel som visas för kund</label>
@@ -235,9 +235,21 @@ async function saveStages(token){
   await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({stages})});
   loadProjects();
 }
+const openDetails = new Set();
+function detailsToggled(token, open){ open ? openDetails.add(token) : openDetails.delete(token); }
+
 async function toggleField(token, field, value){
-  await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({[field]:value})});
-  loadProjects();
+  try{
+    await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({[field]:value})});
+    // Uppdatera bara det som syns – ingen omritning, så rullistan ligger kvar öppen
+    if(field==="active"){
+      const b = document.getElementById("active-"+token);
+      if(b){ b.className = "badge"+(value?"":" off"); b.textContent = value?"Aktiv":"Pausad"; }
+    }
+  }catch(e){
+    alert("Kunde inte spara: "+e.message);
+    loadProjects();
+  }
 }
 async function removeProject(token){
   if(!confirm("Ta bort presentationen? Länken slutar fungera och kundens noteringar raderas.")) return;
