@@ -24,6 +24,7 @@
   .panel h2{font-family:'Bricolage Grotesque',sans-serif;font-size:1.05rem;font-weight:600;color:var(--brand-ink);margin-bottom:12px}
   label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin:10px 0 4px}
   input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.9rem}
+  select{border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-family:inherit;font-size:.84rem;background:var(--paper);color:var(--text)}
   .row{display:flex;gap:10px;flex-wrap:wrap}
   .row>div{flex:1;min-width:180px}
   .btn{background:var(--brand-accent);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:600;font-size:.88rem;margin-top:12px}
@@ -53,6 +54,7 @@
   .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   .badge{font-size:.72rem;padding:3px 10px;border-radius:999px;background:var(--brand-accent-soft);color:var(--brand-accent);font-weight:600}
   .badge.off{background:#F1F1F1;color:var(--muted)}
+  .badge.alert{background:var(--brand-accent);color:#fff}
 </style>
 </head>
 <body>
@@ -110,6 +112,8 @@ async function api(path, opts={}){
   return data;
 }
 
+let unreadTimer = null;
+
 async function connect(){
   WORKER = document.getElementById("workerUrl").value.trim().replace(/\/+$/,"");
   KEY = document.getElementById("adminKey").value.trim() || KEY;
@@ -123,7 +127,20 @@ async function connect(){
     document.getElementById("createPanel").hidden = false;
     document.getElementById("listPanel").hidden = false;
     loadProjects();
+    refreshUnread();
+    if(!unreadTimer) unreadTimer = setInterval(refreshUnread, 60000);
   }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
+}
+
+async function refreshUnread(){
+  try{
+    const {counts, total} = await api("/admin/unread");
+    for(const [token, n] of Object.entries(counts)){
+      const el = document.getElementById("unread-"+token);
+      if(el){ el.hidden = !n; el.textContent = n===1 ? "1 ny händelse" : n+" nya händelser"; }
+    }
+    document.title = (total ? `(${total}) ` : "") + "Kandidatpresentation – Admin";
+  }catch(e){ /* tyst – badges är inte kritiska */ }
 }
 
 async function createProject(){
@@ -160,7 +177,10 @@ function projectHtml(p){
         <h3>${esc(p.jobTitle)} ${p.client?`– ${esc(p.client)}`:""}</h3>
         <div class="meta">Skapad ${new Date(p.createdAt).toLocaleDateString("sv-SE")} · ${viewed}</div>
       </div>
-      <span class="badge ${p.active?"":"off"}">${p.active?"Aktiv":"Pausad"}</span>
+      <span style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <span class="badge alert" id="unread-${p.token}" hidden></span>
+        <span class="badge ${p.active?"":"off"}">${p.active?"Aktiv":"Pausad"}</span>
+      </span>
     </div>
     <div class="linkbox"><span>${esc(link)}</span><a class="openlink" href="${esc(link)}" target="_blank" rel="noopener">Öppna</a><button onclick="copyLink('${esc(link)}',this)">Kopiera</button></div>
 
@@ -176,6 +196,12 @@ function projectHtml(p){
             <span class="tt" title="Namn i Teamtailor">${esc(s.ttName)}</span>
           </div>`).join("")}
         <div class="toggles">
+          <label>Grafisk profil:
+            <select onchange="toggleField('${p.token}','brand',this.value)">
+              <option value="wrknest" ${p.brand!=="engineering"?"selected":""}>Wrknest</option>
+              <option value="engineering" ${p.brand==="engineering"?"selected":""}>Wrknest Engineering</option>
+            </select>
+          </label>
           <label><input type="checkbox" ${p.showContact?"checked":""} onchange="toggleField('${p.token}','showContact',this.checked)"> Visa kontaktuppgifter för kund</label>
           <label><input type="checkbox" ${p.active?"checked":""} onchange="toggleField('${p.token}','active',this.checked)"> Länken aktiv</label>
         </div>
@@ -267,6 +293,7 @@ async function loadFeedback(token){
   const entries = Object.entries(feedback);
   if(!entries.length){ el.innerHTML = "<div class='fb-cand'>Ingen feedback från kund ännu.</div>"; return; }
   if(!nameCache[token]){ try{ await getCandidates(token); }catch(e){ nameCache[token]={}; } }
+  refreshUnread(); // feedbacken är nu läst → uppdatera badges och fliktitel
   const nameOf = cid => (nameCache[token]||{})[cid] || ("Kandidat-ID "+cid);
   const fmtTime = t => { const d = new Date(t); return isNaN(d) ? t : d.toLocaleString("sv-SE",{dateStyle:"full",timeStyle:"short"}); };
   el.innerHTML = entries.map(([cid,fb])=>`
