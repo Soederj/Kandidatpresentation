@@ -55,6 +55,10 @@
   .badge{font-size:.72rem;padding:3px 10px;border-radius:999px;background:var(--brand-accent-soft);color:var(--brand-accent);font-weight:600}
   .badge.off{background:#F1F1F1;color:var(--muted)}
   .badge.alert{background:var(--brand-accent);color:#fff}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(12px);background:var(--brand-ink);color:#fff;
+         padding:11px 20px;border-radius:999px;font-size:.85rem;font-weight:600;opacity:0;
+         transition:opacity .25s, transform .25s;z-index:120;box-shadow:0 8px 24px rgba(61,37,48,.25);pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -83,8 +87,12 @@
     <button class="btn" id="createBtn" onclick="createProject()">Skapa länk</button>
     <div class="msg" id="createMsg"></div>
     <p style="font-size:.76rem;color:var(--muted);margin-top:10px">
-      Jobb-ID hittar du i webbadressen när du är inne på jobbet i Teamtailor.
+      <strong>Så hittar du jobb-ID:</strong> öppna jobbet i Teamtailor och titta i webbläsarens adressfält.
+      ID:t är siffrorna direkt efter <code>/jobs/</code>:
     </p>
+    <div style="font-family:ui-monospace,monospace;font-size:.74rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:6px;word-break:break-all">
+      app.teamtailor.com/companies/xxxx/jobs/<mark style="background:var(--brand-accent-soft);color:var(--brand-accent);font-weight:700;padding:0 4px;border-radius:4px">1234567</mark>/stages
+    </div>
   </div>
 
   <div class="panel" id="listPanel" hidden>
@@ -183,6 +191,12 @@ function projectHtml(p){
       </span>
     </div>
     <div class="linkbox"><span>${esc(link)}</span><a class="openlink" href="${esc(link)}" target="_blank" rel="noopener">Öppna</a><button onclick="copyLink('${esc(link)}',this)">Kopiera</button></div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn ghost" onclick="loadFeedback('${p.token}')">Kundens feedback</button>
+      <button class="btn ghost" onclick="loadPresentations('${p.token}')">Kandidatpresentationer</button>
+    </div>
+    <div id="fb-${p.token}"></div>
+    <div id="pres-${p.token}"></div>
 
     <details ${openDetails.has(p.token)?"open":""} ontoggle="detailsToggled('${p.token}',this.open)">
       <summary>Anpassa steg och inställningar</summary>
@@ -206,13 +220,9 @@ function projectHtml(p){
           <label><input type="checkbox" ${p.active?"checked":""} onchange="toggleField('${p.token}','active',this.checked)"> Länken aktiv</label>
         </div>
         <div class="actions">
-          <button class="btn ghost" onclick="saveStages('${p.token}')">Spara steg</button>
-          <button class="btn ghost" onclick="loadPresentations('${p.token}')">Kandidatpresentationer</button>
-          <button class="btn ghost" onclick="loadFeedback('${p.token}')">Visa kundens feedback</button>
+          <button class="btn ghost" onclick="saveStages('${p.token}',this)">Spara steg</button>
           <button class="btn danger" onclick="removeProject('${p.token}')">Ta bort</button>
         </div>
-        <div id="pres-${p.token}"></div>
-        <div id="fb-${p.token}"></div>
       </div>
     </details>
   </div>`;
@@ -223,20 +233,36 @@ function stageEdit(input){
   const t = input.dataset.token;
   pendingStages[t] = pendingStages[t] || null; // markera att ändringar finns
 }
-async function saveStages(token){
-  const rows = document.querySelectorAll(`#proj-${token} .stage-row`);
-  const proj = (await api("/admin/projects")).projects.find(p=>p.token===token);
-  const stages = proj.stages.map((s,i)=>{
-    const row = rows[i];
-    return { ...s,
-      visible: row.querySelector('[data-field=visible]').checked,
-      label: row.querySelector('[data-field=label]').value.trim() || s.ttName };
-  });
-  await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({stages})});
-  loadProjects();
+async function saveStages(token, btn){
+  if(btn){ btn.disabled = true; btn.textContent = "Sparar …"; }
+  try{
+    const rows = document.querySelectorAll(`#proj-${token} .stage-row`);
+    const proj = (await api("/admin/projects")).projects.find(p=>p.token===token);
+    const stages = proj.stages.map((s,i)=>{
+      const row = rows[i];
+      return { ...s,
+        visible: row.querySelector('[data-field=visible]').checked,
+        label: row.querySelector('[data-field=label]').value.trim() || s.ttName };
+    });
+    await api(`/admin/project/${token}`,{method:"PUT",body:JSON.stringify({stages})});
+    if(btn){ btn.textContent = "Sparat ✓"; }
+    toast("Steg sparade ✓");
+    setTimeout(loadProjects, 900);
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = "Spara steg"; }
+    alert("Kunde inte spara: "+e.message);
+  }
 }
 const openDetails = new Set();
 function detailsToggled(token, open){ open ? openDetails.add(token) : openDetails.delete(token); }
+
+function toast(msg){
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add("show"));
+  setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(), 300); }, 2200);
+}
 
 async function toggleField(token, field, value){
   try{
@@ -246,6 +272,7 @@ async function toggleField(token, field, value){
       const b = document.getElementById("active-"+token);
       if(b){ b.className = "badge"+(value?"":" off"); b.textContent = value?"Aktiv":"Pausad"; }
     }
+    toast("Sparat ✓");
   }catch(e){
     alert("Kunde inte spara: "+e.message);
     loadProjects();

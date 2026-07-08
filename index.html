@@ -71,7 +71,7 @@
   body.theme-engineering .close-btn{background:#232C38;color:#F2F5F8;border-color:#38424F}
   body.theme-engineering .skel{background:linear-gradient(90deg,#1A212B 25%,#242E3B 45%,#1A212B 65%);background-size:200% 100%}
   body.theme-engineering textarea,
-  body.theme-engineering input[type=datetime-local],
+  body.theme-engineering input[type=date],
   body.theme-engineering .note-form input,
   body.theme-engineering select{background:#12161D;color:var(--text);border-color:var(--line)}
   .wm-sub{display:block;font-size:.52em;letter-spacing:.55em;font-weight:400;margin-top:3px}
@@ -102,6 +102,16 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .receipt{margin-top:10px;font-size:.74rem;color:var(--muted)}
   .receipt .read{color:var(--good);font-weight:600}
+
+  /* ---------- Tooltips ---------- */
+  [data-tip]{position:relative}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#3D2530;color:#fff;font-size:.72rem;font-weight:500;line-height:1.35;padding:6px 10px;border-radius:8px;
+    width:max-content;max-width:230px;text-align:center;z-index:60;pointer-events:none;
+    box-shadow:0 4px 14px rgba(0,0,0,.18);font-family:var(--font-body);white-space:normal}
+  [data-tip].tip-down:hover::after{bottom:auto;top:calc(100% + 8px)}
+  body.theme-engineering [data-tip]:hover::after{background:#232C38;color:#F2F5F8}
+  @media (hover:none){[data-tip]:hover::after{display:none}}
 
   main{max-width:1180px;margin:0 auto;padding:26px 28px 60px}
 
@@ -163,7 +173,9 @@
   .fu{margin-top:10px;display:flex;flex-direction:column;gap:8px}
   .fu textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-family:inherit;font-size:.83rem;min-height:64px;resize:vertical}
   .fu .hint{font-size:.76rem;color:var(--muted)}
-  .fu input[type=datetime-local]{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.83rem;color:var(--text)}
+  .fu .time-row{display:flex;gap:8px}
+  .fu input[type=date]{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.83rem;color:var(--text);background:var(--paper)}
+  .fu .time-row select{flex-shrink:0}
   .fu .opts{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;align-items:center}
   .fu .opts label{display:flex;gap:5px;align-items:center;cursor:pointer}
   .fu select{border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-family:inherit;font-size:.83rem}
@@ -263,9 +275,9 @@ function applyTheme(b){
 }
 
 const VERDICTS = [
-  {key:"meet", label:"Vill träffa"},
-  {key:"maybe", label:"Har frågor"},
-  {key:"no", label:"Inte aktuell"},
+  {key:"meet", label:"Vill träffa", tip:"Föreslå intervjutider direkt – vi bokar mötet"},
+  {key:"maybe", label:"Har frågor", tip:"Skriv era frågor så återkommer vi"},
+  {key:"no", label:"Inte aktuell", tip:"Berätta gärna kort varför – det hjälper oss framåt"},
 ];
 const verdictLabel = k => (VERDICTS.find(v=>v.key===k)||{}).label || "";
 
@@ -320,11 +332,11 @@ function render(){
 
   const pipeline = `
     <div class="pipeline" role="tablist">
-      <button class="step all-step ${activeStage==="all"?"active":""}" onclick="setStage('all')">
+      <button class="step all-step ${activeStage==="all"?"active":""}" title="Visa alla kandidater" onclick="setStage('all')">
         <span class="count">${state.candidates.length}</span><span class="label">Alla kandidater</span>
       </button>
       ${stages.map(s=>`
-        <button class="step ${activeStage===s.id?"active":""}" onclick="setStage('${s.id}')">
+        <button class="step ${activeStage===s.id?"active":""}" title="Visa kandidater i steget ${esc(s.label)}" onclick="setStage('${s.id}')">
           <span class="count">${counts[s.id]||0}</span><span class="label">${esc(s.label)}</span>
         </button>`).join("")}
     </div>`;
@@ -336,7 +348,7 @@ function render(){
   if(celebrated===null) celebrated = done;           // redan klart vid sidladdning → ingen salut
   else if(!celebrated && done){ confettiBurst(); confettiBurst(); celebrated = true; }
   const progress = inScope.length ? `
-    <div class="progress-wrap">
+    <div class="progress-wrap" data-tip="Lämna ett omdöme på varje kandidat så fylls mätaren">
       <span class="progress-text">${done
         ? "Tack! Ni har tagit ställning till alla kandidater 🎉"
         : `Ni har tagit ställning till ${decided} av ${inScope.length} kandidater`}</span>
@@ -415,9 +427,9 @@ function renderDrawer(){
         </div>
       </div>
       <div class="drawer-nav">
-        <button class="close-btn" onclick="navCandidate(-1)" aria-label="Föregående kandidat" ${idx>0?"":"disabled"}>‹</button>
-        <button class="close-btn" onclick="navCandidate(1)" aria-label="Nästa kandidat" ${idx>=0&&idx<total-1?"":"disabled"}>›</button>
-        <button class="close-btn" onclick="closeDrawer()" aria-label="Stäng">✕</button>
+        <button class="close-btn tip-down" data-tip="Föregående kandidat (piltangent ←)" onclick="navCandidate(-1)" aria-label="Föregående kandidat" ${idx>0?"":"disabled"}>‹</button>
+        <button class="close-btn tip-down" data-tip="Nästa kandidat (piltangent →)" onclick="navCandidate(1)" aria-label="Nästa kandidat" ${idx>=0&&idx<total-1?"":"disabled"}>›</button>
+        <button class="close-btn tip-down" data-tip="Stäng (Esc)" onclick="closeDrawer()" aria-label="Stäng">✕</button>
       </div>
     </div>
     <div class="drawer-body">
@@ -432,7 +444,7 @@ function renderDrawer(){
         <div class="panel">
           <h4>Ert omdöme</h4>
           <div class="verdict-row">
-            ${VERDICTS.map(v=>`<button class="verdict-btn ${v.key} ${fb.verdict===v.key?"sel":""}" onclick="setVerdict('${v.key}')">${v.label}</button>`).join("")}
+            ${VERDICTS.map(v=>`<button class="verdict-btn ${v.key} ${fb.verdict===v.key?"sel":""}" data-tip="${esc(v.tip)}" onclick="setVerdict('${v.key}')">${v.label}</button>`).join("")}
           </div>
           ${followupHtml(fb)}
           ${receiptHtml(fb)}
@@ -579,10 +591,14 @@ function followupHtml(fb){
     const m = fb.meeting||{};
     const t = m.times||[];
     return `<div class="fu">
-      <div class="hint">Föreslå upp till tre tider som passar er (kvartssteg):</div>
-      <input type="datetime-local" id="fuT1" step="900" value="${esc(t[0]||"")}">
-      <input type="datetime-local" id="fuT2" step="900" value="${esc(t[1]||"")}">
-      <input type="datetime-local" id="fuT3" step="900" value="${esc(t[2]||"")}">
+      <div class="hint">Föreslå upp till tre tider som passar er:</div>
+      ${[0,1,2].map(i=>{
+        const [d,tm] = splitDT(t[i]||"");
+        return `<div class="time-row">
+          <input type="date" id="fuD${i}" value="${esc(d)}">
+          <select id="fuH${i}">${timeOptions(tm)}</select>
+        </div>`;
+      }).join("")}
       <div class="opts">
         <label><input type="radio" name="fuFormat" value="live" ${m.format==="live"?"checked":""}> Träffas live</label>
         <label><input type="radio" name="fuFormat" value="video" ${m.format!=="live"?"checked":""}> Video</label>
@@ -607,9 +623,28 @@ async function saveReason(btn){
   else { btn.disabled=false; btn.textContent="Skicka till Wrknest"; }
 }
 
+function splitDT(v){
+  const m = String(v).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  return m ? [m[1], m[2]] : ["",""];
+}
+
+function timeOptions(sel){
+  let out = `<option value="">Välj tid</option>`;
+  for(let h=6; h<=20; h++) for(const mm of ["00","15","30","45"]){
+    if(h===20 && mm!=="00") continue;
+    const v = String(h).padStart(2,"0")+":"+mm;
+    out += `<option value="${v}" ${v===sel?"selected":""}>${v}</option>`;
+  }
+  return out;
+}
+
 async function saveMeeting(btn){
   btn.disabled=true; btn.textContent="Sparar …";
-  const times = ["fuT1","fuT2","fuT3"].map(id=>document.getElementById(id).value).filter(Boolean);
+  const times = [0,1,2].map(i=>{
+    const d = document.getElementById("fuD"+i).value;
+    const tm = document.getElementById("fuH"+i).value;
+    return d && tm ? d+"T"+tm : "";
+  }).filter(Boolean);
   const format = (document.querySelector('input[name=fuFormat]:checked')||{}).value || "video";
   const duration = document.getElementById("fuDur").value;
   const updated = await postFeedback({candidateId:openCandidate.id, meeting:{times, format, duration}});
