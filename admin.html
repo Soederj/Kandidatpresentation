@@ -47,6 +47,9 @@
   details{margin-top:10px}
   summary{cursor:pointer;font-size:.84rem;font-weight:600;color:var(--brand-accent)}
   .fb-cand{border-top:1px solid var(--line);padding:10px 0;font-size:.84rem}
+  .notis{cursor:pointer;border-radius:8px;padding-left:8px;padding-right:8px;margin:0 -2px}
+  .notis:hover{background:var(--bg)}
+  .notis:first-child{border-top:none}
   .fb-cand .v{font-weight:600}
   .v.meet{color:var(--good)} .v.maybe{color:var(--mid)} .v.no{color:var(--bad)}
   .fb-note{margin-top:4px;padding-left:12px;border-left:2px solid var(--line);font-size:.8rem}
@@ -96,7 +99,11 @@
   </div>
 
   <div class="panel" id="listPanel" hidden>
-    <h2>Aktiva presentationer</h2>
+    <h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span>Aktiva presentationer</span>
+      <button class="btn ghost" style="margin-top:0;padding:7px 14px;font-size:.8rem" onclick="toggleRecent()">🔔 Notiser <span class="badge alert" id="bellCount" hidden></span></button>
+    </h2>
+    <div id="recentPanel" hidden style="margin-bottom:14px;border:1px solid var(--line);border-radius:10px;padding:6px 10px"></div>
     <div id="projectList"><em style="font-size:.85rem;color:var(--muted)">Laddar …</em></div>
   </div>
 
@@ -140,6 +147,44 @@ async function connect(){
   }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
 }
 
+async function toggleRecent(){
+  const el = document.getElementById("recentPanel");
+  if(!el.hidden){ el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = "<em style='font-size:.8rem;color:var(--muted)'>Hämtar …</em>";
+  try{
+    const {events} = await api("/admin/recent");
+    if(!events.length){ el.innerHTML = "<div class='fb-cand'>Ingen kundaktivitet ännu.</div>"; return; }
+    const VL = {meet:"Vill träffa", maybe:"Har frågor", no:"Inte aktuell"};
+    el.innerHTML = events.map(e=>{
+      const bits = [];
+      if(e.verdict) bits.push(VL[e.verdict]||e.verdict);
+      if(e.hasMeeting) bits.push("mötesförslag");
+      if(e.hasReason) bits.push("kommentar");
+      if(e.notes) bits.push(e.notes + (e.notes===1 ? " notering" : " noteringar"));
+      return `<div class="fb-cand notis" onclick="openFromNotis('${e.token}')">
+        <div><strong>${esc(e.candidate)}</strong> – ${esc(e.jobTitle)}${e.client?" ("+esc(e.client)+")":""} ${e.unread?'<span class="badge alert">Nytt</span>':""}</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-top:2px">${esc(bits.join(" · ")||"aktivitet")} · ${relTime(e.updatedAt)}</div>
+      </div>`;
+    }).join("");
+  }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
+}
+
+function openFromNotis(token){
+  document.getElementById("recentPanel").hidden = true;
+  const card = document.getElementById("proj-"+token);
+  if(card) card.scrollIntoView({behavior:"smooth", block:"start"});
+  loadFeedback(token);
+}
+
+function relTime(iso){
+  const diff = (Date.now() - new Date(iso)) / 60000;
+  if(diff < 1) return "nyss";
+  if(diff < 60) return Math.round(diff) + " min sedan";
+  if(diff < 1440) return Math.round(diff/60) + " tim sedan";
+  return new Date(iso).toLocaleDateString("sv-SE");
+}
+
 async function refreshUnread(){
   try{
     const {counts, total} = await api("/admin/unread");
@@ -147,6 +192,8 @@ async function refreshUnread(){
       const el = document.getElementById("unread-"+token);
       if(el){ el.hidden = !n; el.textContent = n===1 ? "1 ny händelse" : n+" nya händelser"; }
     }
+    const bc = document.getElementById("bellCount");
+    if(bc){ bc.hidden = !total; bc.textContent = total; }
     document.title = (total ? `(${total}) ` : "") + "Kandidatpresentation – Admin";
   }catch(e){ /* tyst – badges är inte kritiska */ }
 }
@@ -186,7 +233,7 @@ function projectHtml(p){
         <div class="meta">Skapad ${new Date(p.createdAt).toLocaleDateString("sv-SE")} · ${viewed}</div>
       </div>
       <span style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <span class="badge alert" id="unread-${p.token}" hidden></span>
+        <span class="badge alert" id="unread-${p.token}" hidden style="cursor:pointer" title="Visa kundens feedback" onclick="loadFeedback('${p.token}')"></span>
         <span class="badge ${p.active?"":"off"}" id="active-${p.token}">${p.active?"Aktiv":"Pausad"}</span>
       </span>
     </div>
@@ -329,7 +376,8 @@ async function loadFeedback(token){
   el.innerHTML = "<em style='font-size:.8rem;color:var(--muted)'>Hämtar …</em>";
   const {feedback} = await api(`/admin/feedback/${token}`);
   const VL = {meet:"Vill träffa", maybe:"Har frågor", no:"Inte aktuell"};
-  const entries = Object.entries(feedback);
+  const entries = Object.entries(feedback)
+    .sort((a,b)=>((b[1]&&b[1].updatedAt)||"").localeCompare((a[1]&&a[1].updatedAt)||""));
   if(!entries.length){ el.innerHTML = "<div class='fb-cand'>Ingen feedback från kund ännu.</div>"; return; }
   if(!nameCache[token]){ try{ await getCandidates(token); }catch(e){ nameCache[token]={}; } }
   refreshUnread(); // feedbacken är nu läst → uppdatera badges och fliktitel
