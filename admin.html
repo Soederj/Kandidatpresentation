@@ -141,11 +141,15 @@ async function connect(){
     msg.textContent = "Ansluten."; msg.className="msg ok";
     document.getElementById("createPanel").hidden = false;
     document.getElementById("listPanel").hidden = false;
+    try{ await api("/admin/migrate",{method:"POST"}); }catch(e){ /* engångsmigrering, ofarligt om den redan körts */ }
     loadProjects();
     refreshUnread();
-    if(!unreadTimer) unreadTimer = setInterval(refreshUnread, 60000);
+    if(!unreadTimer) unreadTimer = setInterval(()=>{ if(!document.hidden) refreshUnread(); }, 180000);
   }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
 }
+
+// Uppdatera direkt när fliken åter blir aktiv (i stället för att polla i bakgrunden)
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && KEY && WORKER) refreshUnread(); });
 
 async function toggleRecent(){
   const el = document.getElementById("recentPanel");
@@ -205,21 +209,38 @@ async function createProject(){
   const btn = document.getElementById("createBtn");
   btn.disabled = true; msg.textContent = "Skapar – hämtar jobb och steg från Teamtailor …"; msg.className="msg";
   try{
-    await api("/admin/project",{method:"POST",body:JSON.stringify({jobId, client})});
+    const res = await api("/admin/project",{method:"POST",body:JSON.stringify({jobId, client})});
     msg.textContent = "Klart! Länken finns i listan nedan."; msg.className="msg ok";
     document.getElementById("newJobId").value=""; document.getElementById("newClient").value="";
-    loadProjects();
+    // Rita ut projektet direkt från svaret – KV kan behöva någon sekund innan listan är uppdaterad
+    if(res && res.project){
+      knownProjects = [res.project, ...knownProjects.filter(p=>p.token!==res.project.token)];
+      renderProjects(knownProjects);
+      toast("Projekt skapat ✓");
+      setTimeout(loadProjects, 2500); // hämta om när KV hunnit ikapp
+    } else {
+      loadProjects();
+    }
   }catch(e){ msg.textContent = e.message; msg.className="msg err"; }
   btn.disabled = false;
 }
+
+let knownProjects = [];
 
 async function loadProjects(){
   const el = document.getElementById("projectList");
   try{
     const {projects} = await api("/admin/projects");
-    if(!projects.length){ el.innerHTML = "<em style='font-size:.85rem;color:var(--muted)'>Inga presentationer ännu.</em>"; return; }
-    el.innerHTML = projects.map(projectHtml).join("");
+    knownProjects = projects;
+    renderProjects(projects);
   }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
+}
+
+function renderProjects(projects){
+  const el = document.getElementById("projectList");
+  if(!projects.length){ el.innerHTML = "<em style='font-size:.85rem;color:var(--muted)'>Inga presentationer ännu.</em>"; return; }
+  el.innerHTML = projects.map(projectHtml).join("");
+  refreshUnread();
 }
 
 function projectHtml(p){
