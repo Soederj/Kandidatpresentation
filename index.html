@@ -133,7 +133,6 @@
   .step.active{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
   .step.active::after{background:var(--brand-accent);border-color:var(--brand-accent)}
   .step.active .label{color:rgba(255,255,255,.85)}
-  .step.all-step{flex:0 0 auto;min-width:110px}
 
   /* ---------- Progress & effekter ---------- */
   .progress-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -255,7 +254,7 @@ const WORKER_URL = "https://kandidatpresentation.jonathan-soderling-876.workers.
 
 const token = new URLSearchParams(location.search).get("p");
 let state = null;          // {jobTitle, client, stages, candidates, feedback, presentations, showContact}
-let activeStage = "all";
+let activeStage = null;   // sätts till första synliga steget när projektet laddats
 let openCandidate = null;
 let currentList = [];      // senast renderade kandidatlistan (för bläddring i panelen)
 let celebrated = null;     // null = ej initierad; konfetti bara när 100 % nås under sessionen
@@ -304,6 +303,7 @@ async function init(){
       tag.textContent = "För " + data.client;
       tag.hidden = false;
     }
+    if(!activeStage && state.stages.length) activeStage = state.stages[0].id;
     // Sortera kandidaterna i processordning, sedan på namn
     const order = {}; state.stages.forEach((s,i)=>order[s.id]=i);
     state.candidates.sort((a,b)=>{
@@ -336,9 +336,6 @@ function render(){
 
   const pipeline = `
     <div class="pipeline" role="tablist">
-      <button class="step all-step ${activeStage==="all"?"active":""}" title="Visa alla kandidater" onclick="setStage('all')">
-        <span class="count">${state.candidates.length}</span><span class="label">Alla kandidater</span>
-      </button>
       ${stages.map(s=>`
         <button class="step ${activeStage===s.id?"active":""}" title="Visa kandidater i steget ${esc(s.label)}" onclick="setStage('${s.id}')">
           <span class="count">${counts[s.id]||0}</span><span class="label">${esc(s.label)}</span>
@@ -360,7 +357,6 @@ function render(){
     </div>` : "";
 
   const visible = state.candidates.filter(c=>{
-    if(activeStage==="all") return state.stages.some(s=>s.id===c.stageId);
     return c.stageId===activeStage;
   });
   currentList = visible;
