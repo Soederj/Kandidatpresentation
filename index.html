@@ -201,7 +201,28 @@
   .side{display:flex;flex-direction:column;gap:16px}
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
   .panel h4{font-family:var(--font-body);font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-  .pitch-full{font-size:.86rem;color:var(--text);line-height:1.5;white-space:pre-wrap}
+  .pitch-full{font-size:.88rem;color:var(--text);line-height:1.6}
+  /* Formaterad text: stycken och punktlistor */
+  .rich p{margin:0 0 .75em}
+  .rich p:last-child{margin-bottom:0}
+  .rich ul{margin:0 0 .75em 1.15em;padding:0}
+  .rich ul:last-child{margin-bottom:0}
+  .rich li{margin:.25em 0;padding-left:.15em}
+  .rich li::marker{color:var(--brand-accent)}
+
+  /* Noteringar */
+  .note .note-body{line-height:1.55;margin-top:2px}
+  .note.from-wrknest{border-left:3px solid var(--brand-accent);padding-left:10px;margin-left:-13px}
+  .src-pill{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+            background:var(--brand-accent-soft);color:var(--brand-accent);padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:1px}
+  .note-actions{display:inline-flex;gap:10px;margin-left:8px}
+  .note-actions button{background:none;border:none;padding:0;font-size:.72rem;color:var(--muted);text-decoration:underline;cursor:pointer}
+  .note-actions button:hover{color:var(--brand-accent)}
+  .note-edit textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.84rem;min-height:70px;resize:vertical;margin-top:6px;background:var(--paper);color:var(--text)}
+  .note-edit .row{display:flex;gap:8px;margin-top:6px}
+  .note-edit .row button{border:1px solid var(--line);background:var(--paper);color:var(--text);border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:600}
+  .note-edit .row button.primary{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
+  body.theme-engineering .note-edit .row button.primary{color:#1B2340}
   .contact-row{font-size:.84rem;margin-bottom:6px;word-break:break-all}
   .contact-row span{color:var(--muted);display:inline-block;width:64px}
 
@@ -393,6 +414,7 @@ function setStage(id){ activeStage=id; render(); }
 
 /* ---------- Detaljpanel ---------- */
 function openDrawer(cid){
+  editingNote = null;
   openCandidate = state.candidates.find(c=>c.id===cid);
   if(!openCandidate) return;
   renderDrawer();
@@ -438,8 +460,8 @@ function renderDrawer(){
         : `<div class="cv-missing">Inget CV uppladdat.<br>Kontakta oss så skickar vi underlag.</div>`}
       </div>
       <div class="side">
-        ${(state.presentations||{})[c.id]?`<div class="panel"><h4>Wrknests presentation</h4><div class="pitch-full">${esc(state.presentations[c.id])}</div></div>`:""}
-        ${c.pitch?`<div class="panel"><h4>Om kandidaten</h4><div class="pitch-full">${esc(c.pitch)}</div></div>`:""}
+        ${(state.presentations||{})[c.id]?`<div class="panel"><h4>Wrknests presentation</h4><div class="pitch-full rich">${richText(state.presentations[c.id])}</div></div>`:""}
+        ${c.pitch?`<div class="panel"><h4>Om kandidaten</h4><div class="pitch-full rich">${richText(c.pitch)}</div></div>`:""}
         ${contact}
         <div class="panel">
           <h4>Ert omdöme</h4>
@@ -451,7 +473,7 @@ function renderDrawer(){
         </div>
         <div class="panel">
           <h4>Noteringar</h4>
-          <div id="notesList">${fb.notes.map(noteHtml).join("") || `<div class="note" style="color:var(--muted)">Inga noteringar ännu.</div>`}</div>
+          <div id="notesList">${(fb.notes||[]).map((n,i)=>noteHtml(n,i)).join("") || `<div class="note" style="color:var(--muted)">Inga noteringar ännu.</div>`}</div>
           <div class="note-form">
             <textarea id="noteText" placeholder="Skriv en notering till Wrknest …"></textarea>
             <input id="noteAuthor" placeholder="Ditt namn" value="${esc(localStorage.getItem("kp_author")||"")}">
@@ -503,9 +525,73 @@ async function loadCv(c, cvUrl){
   }
 }
 
-function noteHtml(n){
+/* Gör om fritext till stycken och punktlistor.
+   Tom rad = nytt stycke. Rader som börjar med - • * blir punktlista. Enkel radbrytning behålls. */
+function richText(t){
+  const blocks = String(t||"").replace(/\r\n?/g,"\n").trim().split(/\n\s*\n/);
+  const bullet = /^\s*[-•*–]\s+/;
+  return blocks.filter(b=>b.trim()).map(b=>{
+    const lines = b.split("\n").filter(l=>l.trim());
+    const out = []; let list = []; let para = [];
+    const flushPara = ()=>{ if(para.length){ out.push("<p>"+para.map(esc).join("<br>")+"</p>"); para=[]; } };
+    const flushList = ()=>{ if(list.length){ out.push("<ul>"+list.map(l=>"<li>"+esc(l)+"</li>").join("")+"</ul>"); list=[]; } };
+    for(const l of lines){
+      if(bullet.test(l)){ flushPara(); list.push(l.replace(bullet,"")); }
+      else { flushList(); para.push(l.trim()); }
+    }
+    flushPara(); flushList();
+    return out.join("");
+  }).join("");
+}
+
+const noteKey = (n,i) => n.id || ("i"+i);
+let editingNote = null;
+
+function noteHtml(n, i){
   const d = new Date(n.at);
-  return `<div class="note"><div class="meta">${esc(n.author)} · ${d.toLocaleDateString("sv-SE")} ${d.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"})}</div>${esc(n.text)}</div>`;
+  const id = noteKey(n,i);
+  const isWrknest = n.source === "wrknest";
+  const when = d.toLocaleDateString("sv-SE")+" "+d.toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"});
+  const actions = isWrknest ? "" :
+    `<span class="note-actions"><button onclick="startEditNote('${id}')">Redigera</button><button onclick="deleteNote('${id}')">Ta bort</button></span>`;
+  const body = editingNote === id
+    ? `<div class="note-edit"><textarea id="editText-${id}">${esc(n.text)}</textarea>
+         <div class="row"><button class="primary" onclick="saveEditNote('${id}',this)">Spara</button><button onclick="cancelEditNote()">Avbryt</button></div></div>`
+    : `<div class="note-body rich">${richText(n.text)}</div>`;
+  return `<div class="note ${isWrknest?"from-wrknest":""}">
+    <div class="meta">${esc(n.author)}${isWrknest?'<span class="src-pill">Wrknest</span>':""} · ${when}${n.editedAt?" · redigerad":""}${editingNote===id?"":actions}</div>
+    ${body}
+  </div>`;
+}
+
+function startEditNote(id){ editingNote = id; renderDrawer(); const t=document.getElementById("editText-"+id); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } }
+function cancelEditNote(){ editingNote = null; renderDrawer(); }
+
+async function saveEditNote(id, btn){
+  const text = document.getElementById("editText-"+id).value.trim();
+  if(!text) return;
+  btn.disabled = true; btn.textContent = "Sparar …";
+  const updated = await postNoteEdit({noteId:id, text});
+  if(updated){ editingNote = null; state.feedback[openCandidate.id] = updated; toast("Notering uppdaterad ✓"); renderDrawer(); }
+  else { btn.disabled = false; btn.textContent = "Spara"; }
+}
+
+async function deleteNote(id){
+  if(!confirm("Ta bort noteringen?")) return;
+  const updated = await postNoteEdit({noteId:id, delete:true});
+  if(updated){ state.feedback[openCandidate.id] = updated; toast("Notering borttagen"); renderDrawer(); }
+}
+
+async function postNoteEdit(payload){
+  try{
+    const res = await fetch(`${WORKER_URL}/p/${token}/note-edit`,{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({candidateId:openCandidate.id, ...payload})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error||"Kunde inte spara.");
+    return data.feedback;
+  }catch(e){ alert("Kunde inte spara: "+e.message); return null; }
 }
 
 function navCandidate(dir){

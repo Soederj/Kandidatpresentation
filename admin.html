@@ -49,6 +49,28 @@
   details{margin-top:10px}
   summary{cursor:pointer;font-size:.84rem;font-weight:600;color:var(--brand-accent)}
   .fb-cand{border-top:1px solid var(--line);padding:10px 0;font-size:.84rem}
+  .rich p{margin:0 0 .7em} .rich p:last-child{margin-bottom:0}
+  .rich ul{margin:0 0 .7em 1.15em;padding:0} .rich ul:last-child{margin-bottom:0}
+  .rich li{margin:.2em 0} .rich li::marker{color:var(--brand-accent)}
+  .cand-card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;background:var(--paper)}
+  .cand-card h5{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:1.08rem;color:var(--brand-ink)}
+  .cand-card .sub{font-size:.72rem;color:var(--muted)}
+  .cand-card .lbl{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+  .cand-card textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.85rem;line-height:1.55;resize:vertical}
+  .hint{font-size:.72rem;color:var(--muted);margin-top:4px}
+  .preview{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:.85rem;line-height:1.6;color:var(--text)}
+  .preview:empty{display:none}
+  .anote{border-top:1px solid var(--line);padding:8px 0;font-size:.84rem}
+  .anote:first-child{border-top:none}
+  .anote.from-wrknest{border-left:3px solid var(--brand-accent);padding-left:10px}
+  .anote .meta{font-size:.72rem;color:var(--muted);margin-bottom:3px}
+  .src-pill{display:inline-block;font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:1px}
+  .src-pill.w{background:var(--brand-accent-soft);color:var(--brand-accent)}
+  .src-pill.k{background:#ECEAF8;color:#4153BB}
+  .linkbtn{background:none;border:none;padding:0;margin-left:10px;font-size:.72rem;color:var(--muted);text-decoration:underline;cursor:pointer}
+  .linkbtn:hover{color:var(--brand-accent)}
+  .rowbtns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+  .rowbtns input{flex:0 1 180px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.82rem}
   .notis{cursor:pointer;border-radius:8px;padding-left:8px;padding-right:8px;margin:0 -2px}
   .notis:hover{background:var(--bg)}
   .notis:first-child{border-top:none}
@@ -362,26 +384,142 @@ async function getCandidates(token){
   return data;
 }
 
+const presData = {}; // token -> {candidates, presentations, notes}
+const editingAdminNote = {}; // token -> noteKey som redigeras
+
 async function loadPresentations(token){
   const el = document.getElementById("pres-"+token);
+  if(el.dataset.open === "1" && !el.dataset.reload){ el.innerHTML=""; el.dataset.open=""; return; }
+  el.dataset.reload = "";
   el.innerHTML = "<em style='font-size:.8rem;color:var(--muted)'>Hämtar kandidater från Teamtailor …</em>";
   try{
-    const {candidates, presentations} = await getCandidates(token);
-    if(!candidates.length){ el.innerHTML = "<div class='fb-cand'>Inga kandidater i jobbet ännu.</div>"; return; }
-    el.innerHTML = `
-      <p style="font-size:.78rem;color:var(--muted);margin:12px 0 4px">
-        Presentationen visas överst på kandidatens kort i kundvyn. Lämna tomt och spara för att ta bort.
-      </p>` +
-      candidates.map(c=>`
-      <div class="fb-cand">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
-          <strong>${esc(c.name)}</strong><span style="font-size:.72rem;color:var(--muted)">${esc(c.stage)}</span>
-        </div>
-        <textarea id="ptext-${token}-${c.id}" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.82rem;min-height:60px;margin-top:6px;resize:vertical"
-          placeholder="Wrknests presentation av ${esc(c.name)} för det här uppdraget …">${esc(presentations[c.id]||"")}</textarea>
-        <button class="btn ghost" style="margin-top:6px;padding:7px 14px;font-size:.8rem" onclick="savePres('${token}','${c.id}',this)">Spara</button>
-      </div>`).join("");
+    const data = await getCandidates(token);
+    presData[token] = data;
+    el.dataset.open = "1";
+    renderPresentations(token);
   }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
+}
+
+function renderPresentations(token){
+  const el = document.getElementById("pres-"+token);
+  const {candidates, presentations, notes} = presData[token];
+  if(!candidates.length){
+    el.innerHTML = "<div class='fb-cand'>Inga kandidater i de steg som visas för kund. Kontrollera stegen under Anpassa steg och inställningar.</div>";
+    return;
+  }
+  el.innerHTML = `
+    <p class="hint" style="margin-top:12px">Här syns bara kandidater i steg som är synliga för kund.
+      Tom rad ger nytt stycke, rader som börjar med - blir punktlista.</p>` +
+    candidates.map(c=>candCardHtml(token, c, presentations[c.id]||"", notes[c.id]||[])).join("");
+}
+
+function candCardHtml(token, c, pres, nlist){
+  const author = localStorage.getItem("kpadmin_author") || "";
+  return `
+  <div class="cand-card">
+    <h5>${esc(c.name)}</h5>
+    <div class="sub">${esc(c.stage)}</div>
+
+    <div class="lbl">Presentation</div>
+    <textarea id="ptext-${token}-${c.id}" rows="6" oninput="livePreview('${token}','${c.id}')"
+      placeholder="Wrknests presentation av ${esc(c.name)} för det här uppdraget …">${esc(pres)}</textarea>
+    <div class="preview rich" id="pprev-${token}-${c.id}">${pres?richText(pres):""}</div>
+    <div class="rowbtns"><button class="btn ghost" style="margin-top:0;padding:7px 14px;font-size:.8rem" onclick="savePres('${token}','${c.id}',this)">Spara presentation</button></div>
+
+    <div class="lbl">Noteringar</div>
+    <div id="anotes-${token}-${c.id}">${adminNotesHtml(token, c.id, nlist)}</div>
+    <textarea id="anew-${token}-${c.id}" rows="3" placeholder="Skriv en notering till kunden som Wrknest …" style="margin-top:8px"></textarea>
+    <div class="rowbtns">
+      <input id="aauth-${token}-${c.id}" placeholder="Ditt namn" value="${esc(author)}">
+      <button class="btn" style="margin-top:0;padding:7px 14px;font-size:.8rem" onclick="addAdminNote('${token}','${c.id}',this)">Skicka notering</button>
+    </div>
+  </div>`;
+}
+
+const noteKey = (n,i) => n.id || ("i"+i);
+
+function adminNotesHtml(token, cid, nlist){
+  if(!nlist.length) return "<div class='hint'>Inga noteringar ännu.</div>";
+  return nlist.map((n,i)=>{
+    const id = noteKey(n,i);
+    const w = n.source === "wrknest";
+    const when = new Date(n.at).toLocaleString("sv-SE",{dateStyle:"short",timeStyle:"short"});
+    const editing = editingAdminNote[token] === cid+":"+id;
+    return `<div class="anote ${w?"from-wrknest":""}">
+      <div class="meta">${esc(n.author)}<span class="src-pill ${w?"w":"k"}">${w?"Wrknest":"Kund"}</span> · ${when}${n.editedAt?" · redigerad":""}
+        ${editing?"":`<button class="linkbtn" onclick="editAdminNote('${token}','${cid}','${id}')">Redigera</button><button class="linkbtn" onclick="deleteAdminNote('${token}','${cid}','${id}')">Ta bort</button>`}
+      </div>
+      ${editing
+        ? `<textarea id="aedit-${token}-${cid}-${id}" rows="3">${esc(n.text)}</textarea>
+           <div class="rowbtns"><button class="btn" style="margin-top:0;padding:6px 12px;font-size:.78rem" onclick="saveAdminNote('${token}','${cid}','${id}',this)">Spara</button>
+           <button class="btn ghost" style="margin-top:0;padding:6px 12px;font-size:.78rem" onclick="cancelAdminNote('${token}','${cid}')">Avbryt</button></div>`
+        : `<div class="rich">${richText(n.text)}</div>`}
+    </div>`;
+  }).join("");
+}
+
+function refreshNotes(token, cid){
+  document.getElementById(`anotes-${token}-${cid}`).innerHTML =
+    adminNotesHtml(token, cid, presData[token].notes[cid]||[]);
+}
+
+function livePreview(token, cid){
+  const t = document.getElementById(`ptext-${token}-${cid}`).value;
+  document.getElementById(`pprev-${token}-${cid}`).innerHTML = t.trim() ? richText(t) : "";
+}
+
+async function addAdminNote(token, cid, btn){
+  const ta = document.getElementById(`anew-${token}-${cid}`);
+  const text = ta.value.trim(); if(!text) return;
+  const author = document.getElementById(`aauth-${token}-${cid}`).value.trim();
+  if(author) localStorage.setItem("kpadmin_author", author);
+  btn.disabled = true; btn.textContent = "Skickar …";
+  try{
+    const {notes} = await api(`/admin/note/${token}`,{method:"POST",body:JSON.stringify({candidateId:cid, text, author:author||"Wrknest"})});
+    presData[token].notes[cid] = notes; ta.value = ""; refreshNotes(token, cid);
+    toast("Notering skickad till kund ✓");
+  }catch(e){ alert("Kunde inte spara: "+e.message); }
+  btn.disabled = false; btn.textContent = "Skicka notering";
+}
+
+function editAdminNote(token, cid, id){ editingAdminNote[token] = cid+":"+id; refreshNotes(token, cid); }
+function cancelAdminNote(token, cid){ editingAdminNote[token] = null; refreshNotes(token, cid); }
+
+async function saveAdminNote(token, cid, id, btn){
+  const text = document.getElementById(`aedit-${token}-${cid}-${id}`).value.trim(); if(!text) return;
+  btn.disabled = true; btn.textContent = "Sparar …";
+  try{
+    const {notes} = await api(`/admin/note-edit/${token}`,{method:"POST",body:JSON.stringify({candidateId:cid, noteId:id, text})});
+    presData[token].notes[cid] = notes; editingAdminNote[token] = null; refreshNotes(token, cid);
+    toast("Notering uppdaterad ✓");
+  }catch(e){ alert("Kunde inte spara: "+e.message); btn.disabled=false; btn.textContent="Spara"; }
+}
+
+async function deleteAdminNote(token, cid, id){
+  if(!confirm("Ta bort noteringen? Den försvinner även för kunden.")) return;
+  try{
+    const {notes} = await api(`/admin/note-edit/${token}`,{method:"POST",body:JSON.stringify({candidateId:cid, noteId:id, delete:true})});
+    presData[token].notes[cid] = notes; refreshNotes(token, cid);
+    toast("Notering borttagen");
+  }catch(e){ alert("Kunde inte ta bort: "+e.message); }
+}
+
+/* Tom rad = nytt stycke. Rader som börjar med - • * blir punktlista. */
+function richText(t){
+  const blocks = String(t||"").replace(/\r\n?/g,"\n").trim().split(/\n\s*\n/);
+  const bullet = /^\s*[-•*–]\s+/;
+  return blocks.filter(b=>b.trim()).map(b=>{
+    const lines = b.split("\n").filter(l=>l.trim());
+    const out = []; let list = []; let para = [];
+    const flushPara = ()=>{ if(para.length){ out.push("<p>"+para.map(esc).join("<br>")+"</p>"); para=[]; } };
+    const flushList = ()=>{ if(list.length){ out.push("<ul>"+list.map(l=>"<li>"+esc(l)+"</li>").join("")+"</ul>"); list=[]; } };
+    for(const l of lines){
+      if(bullet.test(l)){ flushPara(); list.push(l.replace(bullet,"")); }
+      else { flushList(); para.push(l.trim()); }
+    }
+    flushPara(); flushList();
+    return out.join("");
+  }).join("");
 }
 
 async function savePres(token, cid, btn){
@@ -390,8 +528,10 @@ async function savePres(token, cid, btn){
   try{
     await api(`/admin/presentation/${token}`,{method:"PUT",body:JSON.stringify({candidateId:cid, text})});
     btn.textContent = "Sparad ✓";
+    if(presData[token]) presData[token].presentations[cid] = text.trim();
+    toast("Presentation sparad ✓");
   }catch(e){ btn.textContent = "Fel: "+e.message; }
-  setTimeout(()=>{ btn.disabled=false; btn.textContent="Spara"; }, 1800);
+  setTimeout(()=>{ btn.disabled=false; btn.textContent="Spara presentation"; }, 1800);
 }
 
 async function loadFeedback(token){
@@ -412,7 +552,7 @@ async function loadFeedback(token){
       ${fb.updatedAt?`<div style="font-size:.72rem;color:var(--muted);margin-top:2px">Senast uppdaterad ${new Date(fb.updatedAt).toLocaleString("sv-SE")}</div>`:""}
       ${fb.reason?`<div class="fb-note"><div class="meta">${fb.verdict==="no"?"Motivering":"Frågor/kommentar"}</div>${esc(fb.reason)}</div>`:""}
       ${fb.meeting&&(fb.meeting.times||[]).length?`<div class="fb-note"><div class="meta">Mötesförslag · ${fb.meeting.format==="live"?"Live":"Video"}${fb.meeting.duration?" · "+esc(fb.meeting.duration)+" min":""}</div>${fb.meeting.times.map(t=>esc(fmtTime(t))).join("<br>")}</div>`:""}
-      ${(fb.notes||[]).map(n=>`<div class="fb-note"><div class="meta">${esc(n.author)} · ${new Date(n.at).toLocaleString("sv-SE")}</div>${esc(n.text)}</div>`).join("")}
+      ${(fb.notes||[]).map(n=>`<div class="fb-note"><div class="meta">${esc(n.author)}<span class="src-pill ${n.source==="wrknest"?"w":"k"}">${n.source==="wrknest"?"Wrknest":"Kund"}</span> · ${new Date(n.at).toLocaleString("sv-SE")}${n.editedAt?" · redigerad":""}</div><div class="rich">${richText(n.text)}</div></div>`).join("")}
     </div>`).join("");
 }
 
