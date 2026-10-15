@@ -71,6 +71,17 @@
   .linkbtn:hover{color:var(--brand-accent)}
   .rowbtns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
   .rowbtns input{flex:0 1 180px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:.82rem}
+  .tt-title{font-size:.72rem;color:var(--muted);margin-top:2px}
+  .searchbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .searchbar .sfield{flex:1;min-width:220px;position:relative}
+  .searchbar .sfield input{padding-left:36px;padding-right:34px}
+  .searchbar .sfield svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none}
+  .searchbar .sclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:none;color:var(--muted);font-size:1rem;padding:4px 6px;line-height:1}
+  .searchbar .sclear:hover{color:var(--brand-accent)}
+  .searchbar select{padding:9px 10px}
+  .scount{font-size:.75rem;color:var(--muted);margin:-6px 0 12px}
+  .kbd{font-family:ui-monospace,monospace;font-size:.7rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
+  mark.hit{background:#FCEAE1;color:inherit;padding:0 1px;border-radius:3px}
   .notis{cursor:pointer;border-radius:8px;padding-left:8px;padding-right:8px;margin:0 -2px}
   .notis:hover{background:var(--bg)}
   .notis:first-child{border-top:none}
@@ -124,9 +135,23 @@
 
   <div class="panel" id="listPanel" hidden>
     <h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <span>Aktiva presentationer</span>
+      <span>Presentationer</span>
       <button class="btn ghost" style="margin-top:0;padding:7px 14px;font-size:.8rem" onclick="toggleRecent()">🔔 Notiser <span class="badge alert" id="bellCount" hidden></span></button>
     </h2>
+    <div class="searchbar">
+      <div class="sfield">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="projSearch" placeholder="Sök på jobbtitel, kund eller jobb-ID" autocomplete="off" oninput="onSearch()" onkeydown="if(event.key==='Escape'){clearSearch()}">
+        <button class="sclear" id="projSearchClear" onclick="clearSearch()" title="Rensa sökningen" hidden>✕</button>
+      </div>
+      <select id="projStatus" onchange="onSearch()" title="Filtrera på status">
+        <option value="all">Alla</option>
+        <option value="active">Aktiva</option>
+        <option value="paused">Pausade</option>
+        <option value="unread">Med ny feedback</option>
+      </select>
+    </div>
+    <div class="scount" id="projCount"></div>
     <div id="recentPanel" hidden style="margin-bottom:14px;border:1px solid var(--line);border-radius:10px;padding:6px 10px"></div>
     <div id="projectList"><em style="font-size:.85rem;color:var(--muted)">Laddar …</em></div>
   </div>
@@ -200,6 +225,11 @@ async function toggleRecent(){
 
 function openFromNotis(token){
   document.getElementById("recentPanel").hidden = true;
+  if(!document.getElementById("proj-"+token)){
+    document.getElementById("projSearch").value = "";
+    document.getElementById("projStatus").value = "all";
+    renderProjects(knownProjects);
+  }
   const card = document.getElementById("proj-"+token);
   if(card) card.scrollIntoView({behavior:"smooth", block:"start"});
   loadFeedback(token);
@@ -216,6 +246,7 @@ function relTime(iso){
 async function refreshUnread(){
   try{
     const {counts, total} = await api("/admin/unread");
+    lastUnread = counts || {};
     for(const [token, n] of Object.entries(counts)){
       const el = document.getElementById("unread-"+token);
       if(el){ el.hidden = !n; el.textContent = n===1 ? "1 ny händelse" : n+" nya händelser"; }
@@ -260,12 +291,64 @@ async function loadProjects(){
   }catch(e){ el.innerHTML = `<span class="msg err">${esc(e.message)}</span>`; }
 }
 
+let lastUnread = {};   // token -> antal olästa, för filtret "Med ny feedback"
+
+function searchTerms(){
+  return (document.getElementById("projSearch")?.value||"").toLowerCase().trim().split(/\s+/).filter(Boolean);
+}
+
+function matchesSearch(p, terms, status){
+  if(status==="active" && !p.active) return false;
+  if(status==="paused" && p.active) return false;
+  if(status==="unread" && !(lastUnread[p.token]>0)) return false;
+  if(!terms.length) return true;
+  const hay = [p.displayTitle, p.jobTitle, p.client, p.jobId].filter(Boolean).join(" ").toLowerCase();
+  return terms.every(t=>hay.includes(t));   // alla ord måste finnas, i valfri ordning
+}
+
 function renderProjects(projects){
   const el = document.getElementById("projectList");
-  if(!projects.length){ el.innerHTML = "<em style='font-size:.85rem;color:var(--muted)'>Inga presentationer ännu.</em>"; return; }
-  el.innerHTML = projects.map(projectHtml).join("");
+  const countEl = document.getElementById("projCount");
+  if(!projects.length){
+    el.innerHTML = "<em style='font-size:.85rem;color:var(--muted)'>Inga presentationer ännu.</em>";
+    countEl.textContent = ""; return;
+  }
+  const terms = searchTerms();
+  const status = document.getElementById("projStatus")?.value || "all";
+  const shown = projects.filter(p=>matchesSearch(p, terms, status));
+  const filtering = terms.length || status!=="all";
+  countEl.textContent = filtering ? `Visar ${shown.length} av ${projects.length} projekt` : `${projects.length} projekt`;
+  document.getElementById("projSearchClear").hidden = !terms.length;
+  el.innerHTML = shown.length
+    ? shown.map(projectHtml).join("")
+    : `<div class="fb-cand" style="border-top:none">Inga projekt matchar sökningen. <button class="linkbtn" style="margin-left:4px" onclick="clearSearch(true)">Visa alla</button></div>`;
+  if(terms.length) highlightHits(terms);
   refreshUnread();
 }
+
+/* Markerar sökorden i projektrubrikerna */
+function highlightHits(terms){
+  const re = new RegExp("("+terms.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","gi");
+  document.querySelectorAll("#projectList .project h3, #projectList .project .tt-title").forEach(h=>{
+    h.innerHTML = h.innerHTML.replace(/(^|>)([^<]+)(?=<|$)/g,(m,a,txt)=>a+txt.replace(re,'<mark class="hit">$1</mark>'));
+  });
+}
+
+let searchTimer = null;
+function onSearch(){ clearTimeout(searchTimer); searchTimer = setTimeout(()=>renderProjects(knownProjects), 80); }
+
+function clearSearch(alsoStatus){
+  const i = document.getElementById("projSearch"); i.value = "";
+  if(alsoStatus) document.getElementById("projStatus").value = "all";
+  renderProjects(knownProjects); i.focus();
+}
+
+/* Tryck / var som helst för att hoppa till sökfältet */
+document.addEventListener("keydown", e=>{
+  if(e.key==="/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && !document.getElementById("listPanel").hidden){
+    e.preventDefault(); document.getElementById("projSearch").focus();
+  }
+});
 
 function projectHtml(p){
   const link = `${CUSTOMER_PAGE}?p=${p.token}`;
@@ -274,7 +357,8 @@ function projectHtml(p){
   <div class="project" id="proj-${p.token}">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
       <div>
-        <h3>${esc(p.jobTitle)} ${p.client?`– ${esc(p.client)}`:""}</h3>
+        <h3>${esc(p.displayTitle||p.jobTitle)} ${p.client?`– ${esc(p.client)}`:""}</h3>
+        ${p.displayTitle && p.displayTitle!==p.jobTitle ? `<div class="tt-title">I Teamtailor: ${esc(p.jobTitle)} · jobb-ID ${esc(p.jobId)}</div>` : `<div class="tt-title">Jobb-ID ${esc(p.jobId)}</div>`}
         <div class="meta">Skapad ${new Date(p.createdAt).toLocaleDateString("sv-SE")} · ${viewed}</div>
       </div>
       <span style="display:flex;gap:6px;align-items:center;flex-shrink:0">

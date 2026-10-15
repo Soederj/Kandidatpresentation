@@ -37,46 +37,66 @@
   button{font-family:inherit;cursor:pointer}
 
   /* ============================================================
-     TEMA: WRKNEST ENGINEERING – mörk marinblå, vitt, ljusrosa accent
-     (färger hämtade från wrknestengineering-sajten)
+     TEMA: WRKNEST ENGINEERING
+     Monokromt enligt Engineerings profil (Marknad > Wrknest Engineering):
+     grafit/nästan svart (#151921 = logotypens färg), vitt, gråskala.
+     Enda accenten är hemsidans rosa knappfärg #F0C5D8. Inga lila/blå toner.
+     Rubriker i tung sans som i profilens bilder ("VI KAN TEKNIK.").
      ============================================================ */
   body.theme-engineering{
-    --brand-ink:#F2F4FB;
-    --brand-pink:#1B2340;        /* djup navy – header */
-    --brand-accent:#CAC6F3;      /* lila accent mot mörk botten */
-    --brand-accent-soft:#2E3757;
-    --brand-salmon:#F4D4E2;
-    --paper:#222B4A; --bg:#161D36; --line:#333C5E;
-    --text:#E4E7F2; --muted:#9AA1BE;
-    --good:#4FC79B; --mid:#E8B05F; --bad:#EC8078;
+    --brand-ink:#F4F5F7;
+    --brand-pink:#0E1015;
+    --brand-accent:#F0C5D8;
+    --brand-accent-soft:#2A2329;
+    --brand-salmon:#FFFFFF;
+    --paper:#181B22; --bg:#111318; --line:#2A2E37;
+    --text:#E2E4E9; --muted:#8E939E;
+    --good:#7BD3A6; --mid:#E6BE72; --bad:#EE8F8F;
+    --font-display:'Inter',sans-serif;
   }
-  body.theme-engineering header{color:#fff}
-  body.theme-engineering .wordmark{color:#fff}
-  body.theme-engineering .intro{color:rgba(255,255,255,.72)}
-  body.theme-engineering .client-tag{background:#F4D4E2;color:#1B2340}
-  body.theme-engineering .overlay{background:rgba(12,16,32,.62)}
-  body.theme-engineering .step .count{color:var(--brand-ink)}
-  body.theme-engineering .step.active .count{color:#1B2340}
-  body.theme-engineering .step.active{color:#1B2340}
-  body.theme-engineering .step.active .label{color:rgba(27,35,64,.72)}
-  body.theme-engineering .cv-chip{color:#CAC6F3}
-  body.theme-engineering .cv-chip.none{background:#2A3355;color:var(--muted)}
-  body.theme-engineering .avatar{color:#CAC6F3}
-  body.theme-engineering .send-btn{color:#1B2340}
-  body.theme-engineering .verdict-dot.meet{background:#1B3D33}
-  body.theme-engineering .verdict-dot.maybe{background:#3B3118}
-  body.theme-engineering .verdict-dot.no{background:#3D2430}
-  body.theme-engineering .verdict-btn.meet.sel{background:#1B3D33;border-color:var(--good)}
-  body.theme-engineering .verdict-btn.maybe.sel{background:#3B3118;border-color:var(--mid)}
-  body.theme-engineering .verdict-btn.no.sel{background:#3D2430;border-color:var(--bad)}
-  body.theme-engineering .card:hover{box-shadow:0 8px 22px rgba(8,12,28,.5)}
-  body.theme-engineering .toast{background:#CAC6F3;color:#1B2340}
-  body.theme-engineering .close-btn{background:#2A3355;color:#F2F4FB;border-color:#3D4770}
-  body.theme-engineering .skel{background:linear-gradient(90deg,#222B4A 25%,#2C3760 45%,#222B4A 65%);background-size:200% 100%}
+  body.theme-engineering header{color:#fff;border-bottom:1px solid #1F222A}
+  body.theme-engineering .wordmark{color:#fff;margin-bottom:6px}
+  body.theme-engineering .wm-logo{display:block;height:42px;width:auto;color:#fff}
+  body.theme-engineering{color-scheme:dark}
+  body.theme-engineering h1{font-weight:800;letter-spacing:-.02em;font-size:2rem;line-height:1.1;margin-top:14px}
+  body.theme-engineering .intro{color:rgba(255,255,255,.6)}
+  body.theme-engineering .client-tag{background:#F0C5D8;color:#151921;font-weight:600}
+  body.theme-engineering .overlay{background:rgba(5,6,9,.7)}
+  body.theme-engineering .step .count{color:var(--brand-ink);font-weight:800}
+  body.theme-engineering .step.active,
+  body.theme-engineering .step.active::after{background:#F4F5F7;border-color:#F4F5F7}
+  body.theme-engineering .step.active,
+  body.theme-engineering .step.active .count{color:#151921}
+  body.theme-engineering .step.active .label{color:rgba(21,25,33,.65)}
+  body.theme-engineering .card h3,
+  body.theme-engineering .drawer-head h2{font-weight:700;letter-spacing:-.01em}
+  body.theme-engineering .card{border-color:#23262E}
+  body.theme-engineering .card:hover{border-color:#3A3E48;box-shadow:0 10px 26px rgba(0,0,0,.5)}
+  body.theme-engineering .avatar{background:#23262E;color:#F4F5F7;font-family:'Inter',sans-serif;font-weight:700}
+  body.theme-engineering .cv-chip{background:#2A2329;color:#F0C5D8}
+  body.theme-engineering .cv-chip.none{background:#20232A;color:var(--muted)}
+  body.theme-engineering .progress-fill{background:#F0C5D8}
+  body.theme-engineering .progress-bar{background:#23262E}
+  body.theme-engineering .send-btn{color:#151921;border-radius:999px;font-weight:700}
+  body.theme-engineering .toast{background:#F4F5F7;color:#151921}
+  body.theme-engineering .close-btn{background:#20232A;color:#F4F5F7;border-color:#363A44}
+  body.theme-engineering .close-btn:hover:not(:disabled){border-color:#F4F5F7}
+  body.theme-engineering .verdict-dot.meet{background:#1C2B24}
+  body.theme-engineering .verdict-dot.maybe{background:#2D271B}
+  body.theme-engineering .verdict-dot.no{background:#2E1F21}
+  body.theme-engineering .verdict-btn.meet.sel{background:#1C2B24;border-color:var(--good)}
+  body.theme-engineering .verdict-btn.maybe.sel{background:#2D271B;border-color:var(--mid)}
+  body.theme-engineering .verdict-btn.no.sel{background:#2E1F21;border-color:var(--bad)}
+  body.theme-engineering .skel{background:linear-gradient(90deg,#181B22 25%,#22252D 45%,#181B22 65%);background-size:200% 100%}
   body.theme-engineering textarea,
   body.theme-engineering input[type=date],
   body.theme-engineering .note-form input,
-  body.theme-engineering select{background:#1B2340;color:var(--text);border-color:var(--line)}
+  body.theme-engineering select{background:#111318;color:var(--text);border-color:var(--line)}
+  body.theme-engineering [data-tip]:hover::after{background:#F4F5F7;color:#151921}
+  body.theme-engineering .note.from-wrknest{border-left-color:#F0C5D8}
+  body.theme-engineering .src-pill{background:#2A2329;color:#F0C5D8}
+  body.theme-engineering .rich li::marker{color:#F0C5D8}
+  .wm-logo{display:none}
   .wm-sub{display:block;font-size:.52em;letter-spacing:.55em;font-weight:400;margin-top:3px}
 
   /* ---------- Header ---------- */
@@ -137,7 +157,6 @@
   /* ---------- Progress & effekter ---------- */
   .progress-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .progress-text{font-size:.84rem;font-weight:600;color:var(--brand-ink)}
-  body.theme-engineering .progress-text{color:var(--brand-ink)}
   .progress-bar{flex:1;min-width:160px;height:10px;background:var(--brand-accent-soft);border-radius:999px;overflow:hidden}
   .progress-fill{height:100%;background:linear-gradient(90deg,var(--brand-salmon),var(--brand-accent));border-radius:999px;transition:width .5s ease}
   @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -222,7 +241,7 @@
   .note-edit .row{display:flex;gap:8px;margin-top:6px}
   .note-edit .row button{border:1px solid var(--line);background:var(--paper);color:var(--text);border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:600}
   .note-edit .row button.primary{background:var(--brand-accent);border-color:var(--brand-accent);color:#fff}
-  body.theme-engineering .note-edit .row button.primary{color:#1B2340}
+  body.theme-engineering .note-edit .row button.primary{color:#151921}
   .contact-row{font-size:.84rem;margin-bottom:6px;word-break:break-all}
   .contact-row span{color:var(--muted);display:inline-block;width:64px}
 
@@ -263,7 +282,7 @@
   <div id="content"><div class="loading">Hämtar kandidater …</div></div>
 </main>
 
-<footer>Presenterat av Wrknest · Innehållet är konfidentiellt och avsett endast för mottagaren.</footer>
+<footer>Presenterat av <span id="footerBrand">Wrknest</span> · Innehållet är konfidentiellt och avsett endast för mottagaren.</footer>
 
 <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer" aria-label="Kandidatdetaljer"></aside>
@@ -283,19 +302,20 @@ let brand = "wrknest";     // grafisk profil: "wrknest" | "engineering"
 
 const THEME_CONFETTI = {
   wrknest: ["#EE7D4C","#CAC6F3","#F4D4E2","#4153BB"],
-  engineering: ["#CAC6F3","#F4D4E2","#EE7D4C","#FFFFFF"],
+  engineering: ["#F0C5D8","#FFFFFF","#8E939E","#F4F5F7"],
 };
+
+/* Wrknest Engineerings ordbild, vektoriserad från originalfilen (Marknad > Wrknest Engineering).
+   Färgen styrs av CSS (currentColor) – vit i headern. */
+const ENGINEERING_LOGO = `<svg class="wm-logo" viewBox="0 0 6344 1447" role="img" aria-label="Wrknest Engineering" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.000000,1447.000000) scale(0.100000,-0.100000)" fill="currentColor"><path d="M7 14463 c-4 -3 -7 -1656 -7 -3672 l0 -3666 707 -707 708 -708 800 0 800 0 682 682 683 683 683 -683 682 -682 800 0 800 0 708 708 707 707 -2 3670 -3 3670 -577 3 -578 2 0 -3800 0 -3800 -1320 0 -1320 0 0 3800 0 3800 -577 -2 -578 -3 -3 -3797 -2 -3798 -1320 0 -1320 0 0 3800 0 3800 -573 0 c-316 0 -577 -3 -580 -7z"/> <path d="M10517 14463 c-4 -3 -7 -1974 -7 -4380 l0 -4373 580 0 580 0 0 3800 0 3800 2460 0 2460 0 0 -1612 0 -1613 580 580 580 580 0 900 0 900 -713 713 -712 712 -2901 0 c-1595 0 -2904 -3 -2907 -7z"/> <path d="M19590 10090 l0 -4380 578 2 577 3 3 1838 2 1837 2328 0 2327 0 708 708 707 707 0 1833 0 1832 -577 -2 -578 -3 -3 -1957 -2 -1958 -2455 0 -2455 0 -2 1958 -3 1957 -577 3 -578 2 0 -4380z"/> <path d="M29368 13763 l-708 -708 0 -3672 0 -3673 580 0 580 0 0 3800 0 3800 2460 0 2460 0 0 -3800 0 -3800 578 2 577 3 3 3665 2 3665 -712 712 -713 713 -2200 0 -2200 0 -707 -707z"/> <path d="M38178 13763 l-708 -708 0 -805 0 -805 680 -680 680 -680 -680 -680 -680 -680 0 -800 0 -800 708 -708 707 -707 3668 0 3667 0 0 580 0 580 -3795 0 -3795 0 0 1320 0 1320 3795 0 3795 0 0 580 0 580 -3795 0 -3795 0 0 1320 0 1320 3795 0 3795 0 0 580 0 580 -3667 0 -3668 0 -707 -707z"/> <path d="M48547 13762 l-707 -707 0 -1070 0 -1070 703 -703 702 -702 2333 0 2332 0 0 -1320 0 -1320 -3035 0 -3035 0 0 -580 0 -580 2908 0 2907 0 708 708 707 707 0 1065 0 1065 -708 708 -707 707 -2328 0 -2327 0 0 1320 0 1320 3035 0 3035 0 0 580 0 580 -2908 0 -2907 0 -708 -708z"/> <path d="M56200 13890 l0 -580 1520 0 1520 0 0 -3800 0 -3800 578 2 577 3 3 3798 2 3797 1515 0 1515 0 0 580 0 580 -3615 0 -3615 0 0 -580z"/> <path d="M16590 7897 l0 -2187 578 2 577 3 3 1605 2 1605 -580 580 -580 580 0 -2188z"/> <path d="M25660 7592 l0 -1882 580 0 580 0 0 1303 0 1302 -580 580 -580 580 0 -1883z"/> <path d="M21565 2349 c-240 -31 -477 -145 -642 -309 -171 -171 -268 -348 -326 -595 l-21 -90 0 -175 -1 -175 18 -85 c53 -250 148 -438 304 -601 169 -177 387 -281 647 -309 l104 -12 111 11 c111 12 235 42 324 80 164 71 316 232 373 399 l19 52 27 0 28 0 0 -245 0 -245 135 0 135 0 -2 612 -3 613 -532 3 -533 2 0 -125 0 -125 400 0 400 0 0 -53 c0 -115 -56 -267 -145 -392 -118 -166 -324 -291 -538 -325 l-78 -13 -117 6 -117 6 -74 21 c-138 39 -249 104 -354 208 -148 144 -233 339 -258 587 l-10 105 10 103 c26 253 114 442 279 598 155 147 318 215 542 226 l115 5 92 -16 c232 -40 421 -160 544 -345 28 -42 52 -77 54 -79 5 -6 215 120 215 130 0 6 -24 47 -54 92 -62 93 -182 213 -275 276 -219 147 -517 214 -796 179z"/> <path d="M48352 2350 c-437 -62 -785 -346 -924 -754 -50 -147 -68 -260 -68 -421 0 -426 180 -791 494 -1000 198 -131 452 -192 694 -165 144 16 242 42 348 95 l91 44 71 66 c82 76 141 161 179 258 l26 67 29 0 28 0 0 -245 0 -245 130 0 130 0 0 615 0 615 -530 0 -530 0 0 -125 0 -125 401 0 402 0 -6 -75 c-26 -304 -270 -584 -589 -676 l-73 -21 -121 -5 -121 -6 -69 12 c-379 64 -637 339 -700 746 l-16 100 6 125 c7 155 32 264 92 390 110 232 303 397 541 462 l78 21 155 1 155 1 70 -19 c95 -25 237 -93 313 -151 70 -53 146 -139 188 -213 15 -26 29 -49 30 -50 2 -3 169 89 213 117 l14 9 -36 58 c-148 242 -387 408 -687 475 -99 22 -316 32 -408 19z"/> <path d="M13857 2313 c-4 -3 -7 -514 -7 -1135 l0 -1128 685 0 685 0 0 115 0 115 -550 0 -550 0 0 400 0 400 475 0 475 0 0 120 0 120 -475 0 -475 0 0 380 0 380 530 0 530 0 0 120 0 120 -658 0 c-362 0 -662 -3 -665 -7z"/> <path d="M16997 2313 c-4 -3 -7 -514 -7 -1135 l0 -1128 135 0 135 0 0 1025 0 1025 29 0 28 0 494 -1025 494 -1024 253 -1 252 0 0 1135 0 1136 -127 -3 -128 -3 -3 -1028 -2 -1028 -30 3 -31 3 -496 1015 c-272 558 -500 1021 -506 1028 l-9 12 -238 0 c-130 0 -240 -3 -243 -7z"/> <path d="M24540 2200 l0 -120 215 0 215 0 0 -895 0 -895 -215 0 -215 0 0 -120 0 -120 565 0 566 0 -3 118 -3 117 -212 3 -213 2 0 895 0 895 215 0 216 0 -3 118 -3 117 -562 3 -563 2 0 -120z"/> <path d="M27497 2313 c-4 -3 -7 -514 -7 -1135 l0 -1128 135 0 135 0 0 1025 0 1025 28 0 28 0 495 -1025 494 -1025 253 0 252 0 -2 1133 -3 1132 -127 3 -128 3 0 -1031 0 -1031 -31 3 -31 3 -497 1015 c-273 558 -500 1021 -504 1028 l-8 12 -238 0 c-131 0 -241 -3 -244 -7z"/> <path d="M31217 2313 c-4 -3 -7 -514 -7 -1135 l0 -1128 685 0 685 0 0 115 0 115 -550 0 -550 0 0 400 0 400 475 0 475 0 0 120 0 120 -475 0 -475 0 0 380 0 380 530 0 530 0 0 120 0 120 -658 0 c-362 0 -662 -3 -665 -7z"/> <path d="M34357 2313 c-4 -3 -7 -514 -7 -1135 l0 -1128 685 0 685 0 0 115 0 115 -550 0 -550 0 0 400 0 400 475 0 475 0 0 120 0 120 -475 0 -475 0 0 380 0 380 530 0 530 0 0 120 0 120 -658 0 c-362 0 -662 -3 -665 -7z"/> <path d="M37497 2313 c-4 -3 -7 -514 -7 -1135 l0 -1128 135 0 135 0 0 456 0 456 373 -4 372 -4 54 -21 c108 -44 174 -113 200 -208 l11 -40 0 -317 0 -318 141 0 141 0 -4 338 -4 337 -27 79 c-51 146 -125 231 -254 293 l-73 35 0 27 0 28 58 16 c379 105 433 692 88 954 -113 85 -248 135 -416 153 -105 11 -913 14 -923 3z m976 -257 c75 -21 142 -55 194 -101 l42 -36 38 -77 38 -76 0 -120 0 -121 -32 -67 c-58 -123 -162 -207 -298 -243 l-59 -15 -318 0 -318 0 0 441 0 441 328 -5 327 -5 58 -16z"/> <path d="M40830 2200 l0 -120 215 0 215 0 0 -895 0 -895 -215 0 -215 0 0 -120 0 -120 565 0 566 0 -3 118 -3 117 -217 3 -218 2 0 895 0 895 220 0 221 0 -3 118 -3 117 -562 3 -563 2 0 -120z"/> <path d="M43787 2314 c-4 -4 -7 -515 -7 -1136 l0 -1128 130 0 130 0 0 1025 0 1025 33 0 32 0 494 -1025 494 -1025 254 0 253 0 -2 1133 -3 1132 -127 3 -128 3 0 -1031 0 -1031 -32 3 -32 3 -502 1025 -501 1025 -239 3 c-132 1 -243 -1 -247 -4z"/></g></svg>`;
+const ENGINEERING_FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1260.000000 1260.000000'%3E%3Crect width='1260.0' height='1260.0' rx='227' fill='%23151921'/%3E%3Cg transform='translate%280.000000,1260.000000%29 scale%280.100000,-0.100000%29' fill='%23FFFFFF'%3E%3Cpath d='M1927 10673 l-7 -6 0 -3666 0 -3666 707 -707 708 -708 800 0 800 0 682 682 683 683 683 -683 682 -682 800 0 800 0 708 708 707 707 -2 3670 -3 3670 -577 3 -578 2 0 -3800 0 -3800 -1320 0 -1320 0 0 3800 0 3800 -577 -2 -578 -3 -3 -3797 -2 -3798 -1320 0 -1320 0 0 3800 0 3800 -573 0 -574 0 -6 -7z'/%3E%3C/g%3E%3C/svg%3E";
 
 function applyTheme(b){
   brand = b === "engineering" ? "engineering" : "wrknest";
   document.body.classList.toggle("theme-engineering", brand === "engineering");
-  document.getElementById("wordmark").innerHTML = brand === "engineering"
-    ? `WRKNEST<span class="wm-sub">ENGINEERING</span>`
-    : "Wrknest";
-  if(brand === "engineering"){
-    document.getElementById("favicon").href =
-      "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%231B2340'/><text x='50' y='74' font-size='62' font-weight='700' text-anchor='middle' font-family='Arial,sans-serif' fill='%23CAC6F3'>W.</text></svg>";
-  }
+  document.getElementById("wordmark").innerHTML = brand === "engineering" ? ENGINEERING_LOGO : "Wrknest";
+  if(brand === "engineering") document.getElementById("favicon").href = ENGINEERING_FAVICON;
+  document.getElementById("footerBrand").textContent = brand === "engineering" ? "Wrknest Engineering" : "Wrknest";
 }
 
 const VERDICTS = [
@@ -521,7 +541,8 @@ async function loadCv(c, cvUrl){
   }catch(e){
     if(!openCandidate || openCandidate.id !== c.id) return;
     const area = document.getElementById("cvArea");
-    if(area) area.innerHTML = `<div class="cv-missing">${esc(e.message)}</div>`;
+    const m = /fetch|network/i.test(e.message) ? "CV:t gick inte att hämta just nu. Ladda om sidan eller kontakta oss." : e.message;
+    if(area) area.innerHTML = `<div class="cv-missing">${esc(m)}</div>`;
   }
 }
 
